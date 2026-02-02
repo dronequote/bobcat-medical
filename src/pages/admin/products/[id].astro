@@ -20,6 +20,7 @@ const { id } = Astro.params;
   </div>
 
   <form id="product-form" class="hidden grid lg:grid-cols-3 gap-6">
+    <input type="hidden" id="productId" value={id} />
     <div class="lg:col-span-2 space-y-6">
       <div class="admin-card">
         <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Product Details</h2>
@@ -142,7 +143,7 @@ const { id } = Astro.params;
   </form>
 </AdminLayout>
 
-<script define:vars={{ id }}>
+<script>
   import { getProduct, updateProduct, getAdminCategories } from '@lib/api';
   import { isAdminLoggedIn } from '@lib/admin-auth';
 
@@ -150,6 +151,7 @@ const { id } = Astro.params;
     window.location.href = '/admin';
   }
 
+  const id = (document.getElementById('productId') as HTMLInputElement)?.value;
   const loadingEl = document.getElementById('loading');
   const form = document.getElementById('product-form') as HTMLFormElement;
   const formError = document.getElementById('form-error');
