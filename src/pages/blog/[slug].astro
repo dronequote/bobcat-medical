@@ -17,6 +17,7 @@ try {
       title: '10 Things Every Night Shift Nurse Needs',
       slug: '10-things-every-night-shift-nurse-needs',
       excerpt: 'Essential gear and tips for surviving and thriving on the night shift.',
+      coverImage: '/images/hero/nurse-working.jpg',
       content: `
 ## Working the night shift?
 
@@ -79,6 +80,7 @@ Check out our [shop](/shop) for nurse-approved accessories that make every shift
       title: 'The Best Ways to Keep Your Stethoscope Accessible',
       slug: 'best-ways-to-keep-stethoscope-accessible',
       excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
+      coverImage: '/images/products/magnetic-holder-1.jpg',
       content: `
 ## The Stethoscope Struggle Is Real
 
@@ -201,6 +203,7 @@ Browse our collection of [stethoscope holders](/shop?category=stethoscope-holder
       title: 'Why Magnetic Stethoscope Holders Are Better',
       slug: 'why-magnetic-stethoscope-holders-are-better',
       excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
+      coverImage: '/images/products/stethoscope-holder-1.jpg',
       content: `
 ## The Magnetic Advantage
 
@@ -292,6 +295,7 @@ Strong. Secure. Simple. That's the magnetic advantage.
       title: 'Self-Care Tips for Healthcare Workers',
       slug: 'self-care-tips-for-healthcare-workers',
       excerpt: 'Practical strategies for maintaining your physical and mental health while caring for others.',
+      coverImage: '/images/about/nurse-smiling.jpg',
       content: `
 ## You Can't Pour From an Empty Cup
 
@@ -387,6 +391,7 @@ Remember: Taking care of yourself isn't selfish. It's necessary. Your patients n
       title: 'Organizing Your Nursing Essentials: A Complete Guide',
       slug: 'organizing-your-nursing-essentials',
       excerpt: 'How to keep all your nursing supplies organized and accessible during busy shifts.',
+      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
       content: `
 ## The Chaos of Nursing Supplies
 
@@ -558,6 +563,34 @@ const htmlContent = post.content ? await marked(post.content) : '';
     <!-- Content -->
     <div class="container-width max-w-4xl py-12">
       <div class="prose prose-lg prose-warm max-w-none" set:html={htmlContent} />
+    </div>
+
+    <!-- Related Products CTA -->
+    <div class="container-width max-w-4xl pb-12">
+      <div class="bg-bobcat-50 rounded-2xl p-8">
+        <h2 class="font-display text-2xl font-bold text-warm-900 mb-4">Shop Featured Products</h2>
+        <p class="text-warm-600 mb-6">Gear designed by healthcare professionals, for healthcare professionals.</p>
+        <div class="grid sm:grid-cols-3 gap-4">
+          <a href="/shop/product/magnetic-stethoscope-holder" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
+            <img src="/images/products/magnetic-holder-1.jpg" alt="Magnetic Stethoscope Holder" class="aspect-square object-cover rounded-lg mb-3" />
+            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Magnetic Stethoscope Holder</h3>
+            <p class="text-bobcat-600 font-bold">$18.99</p>
+          </a>
+          <a href="/shop/product/velcro-stethoscope-holder" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
+            <img src="/images/products/stethoscope-holder-1.jpg" alt="Velcro Stethoscope Holder" class="aspect-square object-cover rounded-lg mb-3" />
+            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Velcro Stethoscope Holder</h3>
+            <p class="text-bobcat-600 font-bold">$18.99</p>
+          </a>
+          <a href="/shop/product/nurse-fanny-pack" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
+            <img src="/images/products/nurse-fanny-pack-1.jpg" alt="Nurse Fanny Pack" class="aspect-square object-cover rounded-lg mb-3" />
+            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Nurse Fanny Pack</h3>
+            <p class="text-bobcat-600 font-bold">$22.99</p>
+          </a>
+        </div>
+        <div class="text-center mt-6">
+          <a href="/shop" class="btn-primary">View All Products</a>
+        </div>
+      </div>
     </div>
 
     <!-- Back to Blog -->
