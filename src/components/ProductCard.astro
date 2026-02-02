@@ -1,4 +1,10 @@
 ---
+interface Variant {
+  name: string;
+  price: number;
+  ghlPriceId?: string;
+}
+
 interface Props {
   id: string;
   name: string;
@@ -8,13 +14,17 @@ interface Props {
   image?: string;
   category?: string;
   shortDescription?: string;
+  variants?: Variant[];
+  ghlProductId?: string;
 }
 
-const { id, name, slug, price, compareAtPrice, image, category, shortDescription } = Astro.props;
+const { id, name, slug, price, compareAtPrice, image, category, shortDescription, variants, ghlProductId } = Astro.props;
 const hasDiscount = compareAtPrice && compareAtPrice > price;
+const hasVariants = variants && variants.length > 0;
+const displayPrice = hasVariants ? variants[0].price : price;
 ---
 
-<div class="card overflow-hidden group">
+<div class="card overflow-hidden group" data-product-card={id}>
   <a href={`/shop/product/${slug}`} class="block">
     <div class="aspect-square bg-warm-100 overflow-hidden relative">
       {image ? (
@@ -52,58 +62,227 @@ const hasDiscount = compareAtPrice && compareAtPrice > price;
     {shortDescription && (
       <p class="text-warm-600 text-sm mb-4 line-clamp-2">{shortDescription}</p>
     )}
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="font-display text-2xl font-bold text-bobcat-600">${price.toFixed(2)}</span>
-        {hasDiscount && (
-          <span class="text-warm-400 line-through text-sm">${compareAtPrice.toFixed(2)}</span>
-        )}
+
+    <!-- Price Display -->
+    <div class="flex items-center gap-2 mb-3">
+      <span class="product-price font-display text-2xl font-bold text-bobcat-600" data-base-price={displayPrice}>
+        ${displayPrice.toFixed(2)}
+      </span>
+      {hasDiscount && (
+        <span class="text-warm-400 line-through text-sm">${compareAtPrice.toFixed(2)}</span>
+      )}
+    </div>
+
+    <!-- Variant Selector (shown when has variants) -->
+    {hasVariants && (
+      <div class="variant-selector mb-3">
+        <div class="flex flex-wrap gap-1">
+          {variants.map((variant, index) => (
+            <button
+              type="button"
+              class={`variant-option text-xs px-2 py-1 rounded border transition-all ${index === 0 ? 'border-bobcat-500 bg-bobcat-50 text-bobcat-700' : 'border-warm-200 hover:border-bobcat-300 text-warm-600'}`}
+              data-variant-index={index}
+              data-variant-name={variant.name}
+              data-variant-price={variant.price}
+              data-variant-ghl-price-id={variant.ghlPriceId || ''}
+            >
+              {variant.name}
+            </button>
+          ))}
+        </div>
       </div>
+    )}
+
+    <!-- Add to Cart Button (initial state) -->
+    <div class="cart-controls">
       <button
-        class="add-to-cart-btn btn-primary btn-sm"
+        class="add-to-cart-btn btn-primary btn-sm w-full"
         data-product-id={id}
         data-product-name={name}
-        data-product-price={price}
+        data-product-price={displayPrice}
         data-product-image={image || ''}
+        data-product-ghl-id={ghlProductId || ''}
+        data-has-variants={hasVariants ? 'true' : 'false'}
+        data-variant-name={hasVariants ? variants[0].name : ''}
+        data-variant-ghl-price-id={hasVariants ? (variants[0].ghlPriceId || '') : ''}
       >
         Add to Cart
       </button>
+
+      <!-- Quantity Controls (shown after adding) -->
+      <div class="quantity-controls hidden">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center border border-warm-200 rounded-lg overflow-hidden">
+            <button type="button" class="qty-decrease px-3 py-2 text-warm-600 hover:bg-warm-100 transition-colors font-bold">-</button>
+            <span class="qty-display px-3 py-2 text-warm-900 font-semibold min-w-[2.5rem] text-center">1</span>
+            <button type="button" class="qty-increase px-3 py-2 text-warm-600 hover:bg-warm-100 transition-colors font-bold">+</button>
+          </div>
+          <button type="button" class="remove-from-cart text-warm-400 hover:text-red-500 p-2 transition-colors" title="Remove from cart">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  import { addToCart } from '@lib/cart';
+  import { addToCart, getCart, updateQuantity, removeFromCart } from '@lib/cart';
 
-  // This script runs for each ProductCard instance
-  document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-    // Only add listener if not already added
-    if (btn.getAttribute('data-listener-added')) return;
-    btn.setAttribute('data-listener-added', 'true');
+  function initProductCards() {
+    document.querySelectorAll('[data-product-card]').forEach(card => {
+      const productId = card.getAttribute('data-product-card');
+      if (!productId) return;
 
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      // Already initialized?
+      if (card.getAttribute('data-initialized')) return;
+      card.setAttribute('data-initialized', 'true');
 
-      const button = e.currentTarget as HTMLElement;
-      const productId = button.dataset.productId!;
-      const name = button.dataset.productName!;
-      const price = parseFloat(button.dataset.productPrice!);
-      const image = button.dataset.productImage;
+      const addBtn = card.querySelector('.add-to-cart-btn') as HTMLButtonElement;
+      const quantityControls = card.querySelector('.quantity-controls') as HTMLElement;
+      const qtyDisplay = card.querySelector('.qty-display') as HTMLElement;
+      const qtyDecrease = card.querySelector('.qty-decrease') as HTMLButtonElement;
+      const qtyIncrease = card.querySelector('.qty-increase') as HTMLButtonElement;
+      const removeBtn = card.querySelector('.remove-from-cart') as HTMLButtonElement;
+      const variantOptions = card.querySelectorAll('.variant-option') as NodeListOf<HTMLButtonElement>;
+      const priceDisplay = card.querySelector('.product-price') as HTMLElement;
 
-      addToCart({ productId, name, price, image }, 1);
+      let currentVariantName = addBtn?.dataset.variantName || '';
+      let currentVariantPrice = parseFloat(addBtn?.dataset.productPrice || '0');
+      let currentGhlPriceId = addBtn?.dataset.variantGhlPriceId || '';
 
-      // Visual feedback
-      const originalText = button.textContent;
-      button.textContent = 'Added!';
-      button.classList.add('bg-green-500');
-      button.classList.remove('bg-bobcat-500');
+      // Handle variant selection
+      variantOptions.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
 
-      setTimeout(() => {
-        button.textContent = originalText;
-        button.classList.remove('bg-green-500');
-        button.classList.add('bg-bobcat-500');
-      }, 1500);
+          // Update active state
+          variantOptions.forEach(b => {
+            b.classList.remove('border-bobcat-500', 'bg-bobcat-50', 'text-bobcat-700');
+            b.classList.add('border-warm-200', 'text-warm-600');
+          });
+          btn.classList.add('border-bobcat-500', 'bg-bobcat-50', 'text-bobcat-700');
+          btn.classList.remove('border-warm-200', 'text-warm-600');
+
+          // Update current variant
+          currentVariantName = btn.dataset.variantName || '';
+          currentVariantPrice = parseFloat(btn.dataset.variantPrice || '0');
+          currentGhlPriceId = btn.dataset.variantGhlPriceId || '';
+
+          // Update price display
+          if (priceDisplay) {
+            priceDisplay.textContent = `$${currentVariantPrice.toFixed(2)}`;
+          }
+
+          // Update add button data
+          if (addBtn) {
+            addBtn.dataset.productPrice = currentVariantPrice.toString();
+            addBtn.dataset.variantName = currentVariantName;
+            addBtn.dataset.variantGhlPriceId = currentGhlPriceId;
+          }
+
+          // Check if this variant is in cart and update UI
+          updateCartUI();
+        });
+      });
+
+      function updateCartUI() {
+        const cart = getCart();
+        const itemInCart = cart.items.find(i =>
+          i.productId === productId &&
+          (i.ghlPriceId || '') === (currentGhlPriceId || '')
+        );
+
+        if (itemInCart) {
+          addBtn?.classList.add('hidden');
+          quantityControls?.classList.remove('hidden');
+          if (qtyDisplay) qtyDisplay.textContent = itemInCart.quantity.toString();
+        } else {
+          addBtn?.classList.remove('hidden');
+          quantityControls?.classList.add('hidden');
+        }
+      }
+
+      // Add to cart
+      addBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const name = addBtn.dataset.productName!;
+        const price = parseFloat(addBtn.dataset.productPrice!);
+        const image = addBtn.dataset.productImage;
+        const ghlProductId = addBtn.dataset.productGhlId;
+        const hasVariants = addBtn.dataset.hasVariants === 'true';
+        const fullName = hasVariants && currentVariantName ? `${name} - ${currentVariantName}` : name;
+
+        addToCart({
+          productId: productId!,
+          name: fullName,
+          price,
+          image,
+          ghlProductId,
+          ghlPriceId: currentGhlPriceId || undefined,
+        }, 1);
+
+        updateCartUI();
+      });
+
+      // Quantity decrease
+      qtyDecrease?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const cart = getCart();
+        const item = cart.items.find(i =>
+          i.productId === productId &&
+          (i.ghlPriceId || '') === (currentGhlPriceId || '')
+        );
+        if (item && item.quantity > 1) {
+          updateQuantity(productId!, item.quantity - 1, currentGhlPriceId || undefined);
+          updateCartUI();
+        } else if (item) {
+          removeFromCart(productId!, currentGhlPriceId || undefined);
+          updateCartUI();
+        }
+      });
+
+      // Quantity increase
+      qtyIncrease?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const cart = getCart();
+        const item = cart.items.find(i =>
+          i.productId === productId &&
+          (i.ghlPriceId || '') === (currentGhlPriceId || '')
+        );
+        if (item) {
+          updateQuantity(productId!, item.quantity + 1, currentGhlPriceId || undefined);
+          updateCartUI();
+        }
+      });
+
+      // Remove from cart
+      removeBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        removeFromCart(productId!, currentGhlPriceId || undefined);
+        updateCartUI();
+      });
+
+      // Listen for cart updates
+      window.addEventListener('cart-updated', () => updateCartUI());
+
+      // Initial state check
+      updateCartUI();
     });
-  });
+  }
+
+  // Initialize on load and after navigation
+  initProductCards();
+  document.addEventListener('astro:page-load', initProductCards);
 </script>
