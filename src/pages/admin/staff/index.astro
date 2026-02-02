@@ -1,0 +1,175 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Staff">
+  <div class="flex justify-between items-center mb-6">
+    <p class="text-warm-600">Manage admin users</p>
+    <button id="add-staff-btn" class="btn-primary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Staff
+    </button>
+  </div>
+
+  <div class="admin-card">
+    <div id="loading" class="text-center py-12 text-warm-500">
+      <div class="animate-spin w-8 h-8 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      Loading...
+    </div>
+
+    <table id="table" class="admin-table hidden">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+
+  <!-- Add Staff Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50">
+    <div class="bg-white rounded-2xl w-full max-w-md p-6">
+      <h2 class="font-display text-xl font-bold text-warm-900 mb-4">Add Staff Member</h2>
+
+      <form id="staff-form" class="space-y-4">
+        <div>
+          <label for="email" class="label">Email *</label>
+          <input type="email" id="email" name="email" class="input-field" required />
+        </div>
+        <div>
+          <label for="firstName" class="label">First Name *</label>
+          <input type="text" id="firstName" name="firstName" class="input-field" required />
+        </div>
+        <div>
+          <label for="lastName" class="label">Last Name *</label>
+          <input type="text" id="lastName" name="lastName" class="input-field" required />
+        </div>
+        <div>
+          <label for="role" class="label">Role</label>
+          <select id="role" name="role" class="input-field">
+            <option value="admin">Admin</option>
+            <option value="superadmin">Super Admin</option>
+          </select>
+        </div>
+
+        <div id="modal-error" class="hidden bg-red-50 text-red-700 p-3 rounded-lg text-sm"></div>
+
+        <div class="flex gap-3">
+          <button type="button" id="cancel-btn" class="btn-secondary flex-1">Cancel</button>
+          <button type="submit" id="create-btn" class="btn-primary flex-1">Add Staff</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { getStaff, createStaff, deleteStaff } from '@lib/api';
+  import { isAdminLoggedIn, isSuperAdmin } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) window.location.href = '/admin';
+
+  const loadingEl = document.getElementById('loading');
+  const tableEl = document.getElementById('table');
+  const listEl = document.getElementById('list');
+  const modal = document.getElementById('modal');
+  const staffForm = document.getElementById('staff-form') as HTMLFormElement;
+  const modalError = document.getElementById('modal-error');
+  const addBtn = document.getElementById('add-staff-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const createBtn = document.getElementById('create-btn');
+
+  // Only superadmins can add staff
+  if (!isSuperAdmin()) {
+    addBtn?.classList.add('hidden');
+  }
+
+  async function load() {
+    try {
+      const items = await getStaff();
+      loadingEl?.classList.add('hidden');
+      tableEl?.classList.remove('hidden');
+
+      if (listEl) {
+        listEl.innerHTML = items.map(item => `
+          <tr data-id="${item._id}">
+            <td class="font-semibold text-warm-900">${item.firstName} ${item.lastName}</td>
+            <td class="text-warm-600">${item.email}</td>
+            <td>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                item.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : 'bg-bobcat-100 text-bobcat-700'
+              }">
+                ${item.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+              </span>
+            </td>
+            <td class="text-right">
+              ${isSuperAdmin() ? `<button class="delete-btn text-red-600 hover:text-red-700 font-medium" data-id="${item._id}">Remove</button>` : ''}
+            </td>
+          </tr>
+        `).join('');
+
+        listEl.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLElement).dataset.id;
+            if (!id || !confirm('Remove this staff member?')) return;
+            try {
+              await deleteStaff(id);
+              document.querySelector(`tr[data-id="${id}"]`)?.remove();
+            } catch (error: any) {
+              alert(error.message);
+            }
+          });
+        });
+      }
+    } catch (error: any) {
+      loadingEl!.innerHTML = `<p class="text-red-600">${error.message}</p>`;
+    }
+  }
+
+  load();
+
+  // Modal handlers
+  addBtn?.addEventListener('click', () => {
+    modal?.classList.remove('hidden');
+    modal?.classList.add('flex');
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    modal?.classList.add('hidden');
+    modal?.classList.remove('flex');
+    staffForm?.reset();
+  });
+
+  staffForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    modalError?.classList.add('hidden');
+    if (createBtn) { createBtn.textContent = 'Adding...'; createBtn.setAttribute('disabled', 'true'); }
+
+    const formData = new FormData(staffForm);
+
+    try {
+      await createStaff({
+        email: formData.get('email') as string,
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
+        role: formData.get('role') as string,
+      });
+
+      modal?.classList.add('hidden');
+      modal?.classList.remove('flex');
+      staffForm.reset();
+      load(); // Reload list
+
+    } catch (error: any) {
+      if (modalError) { modalError.textContent = error.message; modalError.classList.remove('hidden'); }
+    } finally {
+      if (createBtn) { createBtn.textContent = 'Add Staff'; createBtn.removeAttribute('disabled'); }
+    }
+  });
+</script>

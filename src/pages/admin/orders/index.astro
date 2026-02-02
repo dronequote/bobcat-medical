@@ -1,0 +1,93 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Orders">
+  <div class="mb-6">
+    <p class="text-warm-600">View and manage customer orders</p>
+  </div>
+
+  <div class="admin-card">
+    <div id="loading" class="text-center py-12 text-warm-500">
+      <div class="animate-spin w-8 h-8 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      Loading orders...
+    </div>
+
+    <div id="empty" class="hidden text-center py-12 text-warm-500">
+      <svg class="w-16 h-16 mx-auto mb-4 text-warm-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+      </svg>
+      <p>No orders yet</p>
+    </div>
+
+    <table id="table" class="admin-table hidden">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<script>
+  import { getAdminOrders } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) window.location.href = '/admin';
+
+  const loadingEl = document.getElementById('loading');
+  const emptyEl = document.getElementById('empty');
+  const tableEl = document.getElementById('table');
+  const listEl = document.getElementById('list');
+
+  async function load() {
+    try {
+      const items = await getAdminOrders();
+      loadingEl?.classList.add('hidden');
+
+      if (items.length === 0) {
+        emptyEl?.classList.remove('hidden');
+        return;
+      }
+
+      tableEl?.classList.remove('hidden');
+
+      if (listEl) {
+        listEl.innerHTML = items.map(order => `
+          <tr>
+            <td class="font-mono text-sm text-warm-600">#${order._id.slice(-8).toUpperCase()}</td>
+            <td>
+              <div class="font-semibold text-warm-900">${order.customerName || 'Guest'}</div>
+              <div class="text-xs text-warm-500">${order.customerEmail}</div>
+            </td>
+            <td class="text-sm text-warm-600">
+              ${order.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}
+            </td>
+            <td class="font-semibold text-bobcat-600">$${(order.total / 100).toFixed(2)}</td>
+            <td>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                order.status === 'paid' ? 'bg-green-100 text-green-700' :
+                order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-warm-100 text-warm-600'
+              }">
+                ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+              </span>
+            </td>
+            <td class="text-warm-500 text-sm">${new Date(order.createdAt).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      }
+    } catch (error: any) {
+      loadingEl!.innerHTML = `<p class="text-red-600">${error.message}</p>`;
+    }
+  }
+
+  load();
+</script>

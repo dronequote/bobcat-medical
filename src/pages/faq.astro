@@ -1,0 +1,102 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+
+const faqs = [
+  {
+    question: 'Are your stethoscope holders compatible with all stethoscope brands?',
+    answer: 'Yes! Our stethoscope holders are designed to work with all major stethoscope brands including Littmann, MDF, ADC, and more. The universal design ensures a secure fit regardless of your stethoscope model.',
+  },
+  {
+    question: 'Will the magnets interfere with medical equipment?',
+    answer: 'No, our magnetic stethoscope holders use carefully calibrated neodymium magnets that are strong enough to hold your stethoscope securely but are designed to be safe for use in clinical environments. They will not interfere with pacemakers, medical devices, or other equipment at normal working distances.',
+  },
+  {
+    question: 'Will your products hold up during long shifts?',
+    answer: 'Absolutely! All Bobcat Medical products are designed with healthcare professionals in mind. We use reinforced materials, durable stitching, and quality components that can withstand the demands of 12-hour shifts and beyond.',
+  },
+  {
+    question: 'What is your return policy?',
+    answer: 'We offer a 30-day satisfaction guarantee on all products. If you\'re not completely happy with your purchase, you can return it for a full refund or exchange. Just contact us at info@bobcatmedicalstore.com to start the return process.',
+  },
+  {
+    question: 'How long does shipping take?',
+    answer: 'Standard shipping typically takes 5-7 business days within the continental US. Expedited shipping options are available at checkout for faster delivery. International shipping times vary by location.',
+  },
+  {
+    question: 'Do you offer bulk or wholesale pricing?',
+    answer: 'Yes! We offer special pricing for hospitals, clinics, nursing schools, and other healthcare organizations. Contact us at info@bobcatmedicalstore.com for more information about wholesale opportunities.',
+  },
+  {
+    question: 'How do I care for my products?',
+    answer: 'Most of our products can be wiped clean with standard disinfecting wipes or a damp cloth. The fanny packs are machine washable on a gentle cycle. Check the product description or tag for specific care instructions.',
+  },
+  {
+    question: 'Do you ship internationally?',
+    answer: 'Currently, we primarily ship within the United States. However, we\'re working on expanding our shipping options. Contact us if you\'re interested in international shipping and we\'ll do our best to accommodate your request.',
+  },
+];
+---
+
+<BaseLayout
+  title="FAQ"
+  description="Frequently asked questions about Bobcat Medical products, shipping, returns, and more."
+>
+  <!-- Hero -->
+  <section class="bg-bobcat-800 text-white py-16">
+    <div class="container-width text-center">
+      <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h1>
+      <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
+        Find answers to common questions about our products and services
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQs -->
+  <section class="section-padding bg-warm-50">
+    <div class="container-width max-w-3xl">
+      <div class="space-y-4">
+        {faqs.map((faq, index) => (
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <button
+              class="faq-toggle w-full text-left p-6 flex items-center justify-between gap-4"
+              data-index={index}
+            >
+              <span class="font-semibold text-warm-900">{faq.question}</span>
+              <svg class="faq-icon w-5 h-5 text-bobcat-600 flex-shrink-0 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6">
+              <p class="text-warm-600">{faq.answer}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Still have questions -->
+      <div class="mt-12 text-center bg-white rounded-2xl p-8 shadow-sm">
+        <h2 class="font-display text-2xl font-bold text-warm-900 mb-4">
+          Still have questions?
+        </h2>
+        <p class="text-warm-600 mb-6">
+          We're here to help! Reach out and we'll get back to you as soon as possible.
+        </p>
+        <a href="/contact" class="btn-primary">
+          Contact Us
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  document.querySelectorAll('.faq-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const content = button.nextElementSibling;
+      const icon = button.querySelector('.faq-icon');
+
+      content?.classList.toggle('hidden');
+      icon?.classList.toggle('rotate-180');
+    });
+  });
+</script>

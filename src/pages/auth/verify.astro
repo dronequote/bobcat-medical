@@ -1,0 +1,89 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Verify Login">
+  <section class="section-padding bg-warm-50 min-h-[70vh] flex items-center">
+    <div class="container-width max-w-md">
+      <div class="bg-white rounded-2xl p-8 shadow-lg text-center">
+        <!-- Loading State -->
+        <div id="verify-loading">
+          <div class="animate-spin w-12 h-12 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+          <h1 class="font-display text-2xl font-bold text-warm-900 mb-2">Verifying...</h1>
+          <p class="text-warm-500">Please wait while we verify your login link.</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="verify-success" class="hidden">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 class="font-display text-2xl font-bold text-warm-900 mb-2">You're signed in!</h1>
+          <p class="text-warm-500 mb-6">Redirecting you to your account...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="verify-error" class="hidden">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 class="font-display text-2xl font-bold text-warm-900 mb-2">Verification Failed</h1>
+          <p id="error-message" class="text-warm-500 mb-6">The link is invalid or has expired.</p>
+          <a href="/account" class="btn-primary">
+            Try Again
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { verifyMagicLink } from '@lib/auth';
+
+  const loadingEl = document.getElementById('verify-loading');
+  const successEl = document.getElementById('verify-success');
+  const errorEl = document.getElementById('verify-error');
+  const errorMessage = document.getElementById('error-message');
+
+  // Get token from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+
+  async function verify() {
+    if (!token) {
+      showError('No verification token provided.');
+      return;
+    }
+
+    try {
+      await verifyMagicLink(token);
+      showSuccess();
+    } catch (error: any) {
+      showError(error.message || 'Verification failed. Please try again.');
+    }
+  }
+
+  function showSuccess() {
+    loadingEl?.classList.add('hidden');
+    successEl?.classList.remove('hidden');
+
+    // Redirect to account page after 2 seconds
+    setTimeout(() => {
+      window.location.href = '/account';
+    }, 2000);
+  }
+
+  function showError(message: string) {
+    loadingEl?.classList.add('hidden');
+    errorEl?.classList.remove('hidden');
+    if (errorMessage) errorMessage.textContent = message;
+  }
+
+  // Start verification
+  verify();
+</script>

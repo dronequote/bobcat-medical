@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans text-warm-800 antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-bobcat-500 hover:bg-bobcat-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-warm-50 text-bobcat-600 border-2 border-bobcat-500 px-6 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2;
+  }
+  .btn-coral {
+    @apply bg-coral-500 hover:bg-coral-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2;
+  }
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+  .container-width {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-warm-300 focus:ring-2 focus:ring-bobcat-500 focus:border-bobcat-500 outline-none transition-colors;
+  }
+  .label {
+    @apply block text-sm font-medium text-warm-700 mb-1;
+  }
+  .admin-card {
+    @apply bg-white rounded-xl shadow-sm border border-warm-200 p-6;
+  }
+  .admin-table {
+    @apply w-full text-left;
+  }
+  .admin-table th {
+    @apply px-4 py-3 text-sm font-semibold text-warm-600 border-b border-warm-200;
+  }
+  .admin-table td {
+    @apply px-4 py-3 text-sm text-warm-800 border-b border-warm-100;
+  }
+  .admin-table tr:hover td {
+    @apply bg-warm-50;
+  }
+}

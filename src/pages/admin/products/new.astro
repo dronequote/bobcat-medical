@@ -1,0 +1,393 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Add Product">
+  <div class="mb-6">
+    <a href="/admin/products" class="text-bobcat-600 hover:text-bobcat-700 font-medium flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Products
+    </a>
+  </div>
+
+  <form id="product-form" class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Product Details</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label for="name" class="label">Product Name *</label>
+            <input type="text" id="name" name="name" class="input-field" required />
+          </div>
+
+          <div>
+            <label for="slug" class="label">URL Slug</label>
+            <input type="text" id="slug" name="slug" class="input-field" placeholder="auto-generated-from-name" />
+          </div>
+
+          <div>
+            <label for="shortDescription" class="label">Short Description</label>
+            <input type="text" id="shortDescription" name="shortDescription" class="input-field" maxlength="150" />
+          </div>
+
+          <div>
+            <label for="description" class="label">Full Description (Markdown supported)</label>
+            <textarea id="description" name="description" rows="6" class="input-field font-mono text-sm"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Images</h2>
+
+        <div id="images-container" class="space-y-3">
+          <div class="flex gap-3 items-start image-row">
+            <input type="text" name="image_src_0" placeholder="Image URL (Cloudinary)" class="input-field flex-1" />
+            <input type="text" name="image_alt_0" placeholder="Alt text" class="input-field w-48" />
+            <button type="button" class="remove-image btn-danger btn-sm hidden">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" id="add-image" class="mt-4 text-bobcat-600 hover:text-bobcat-700 font-medium flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add another image
+        </button>
+      </div>
+
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Variants</h2>
+        <p class="text-sm text-warm-500 mb-4">Add product variants like sizes or colors. Each variant syncs to GHL as a separate price.</p>
+
+        <label class="flex items-center gap-3 mb-4">
+          <input type="checkbox" id="hasVariants" name="hasVariants" class="w-5 h-5 rounded border-warm-300 text-bobcat-600 focus:ring-bobcat-500" />
+          <span class="text-warm-800">This product has variants</span>
+        </label>
+
+        <div id="variants-section" class="hidden">
+          <div id="variants-container" class="space-y-3">
+            <div class="flex gap-3 items-center variant-row bg-warm-50 p-3 rounded-lg">
+              <input type="text" name="variant_name_0" placeholder="Variant name (e.g., Small - Blue)" class="input-field flex-1" />
+              <input type="text" name="variant_sku_0" placeholder="SKU" class="input-field w-32" />
+              <input type="number" name="variant_price_0" placeholder="Price" step="0.01" min="0" class="input-field w-28" />
+              <input type="number" name="variant_stock_0" placeholder="Stock" min="0" class="input-field w-24" />
+              <button type="button" class="remove-variant btn-danger btn-sm hidden">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" id="add-variant" class="mt-4 text-bobcat-600 hover:text-bobcat-700 font-medium flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add variant
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Specifications</h2>
+
+        <div id="specs-container" class="space-y-3">
+          <div class="flex gap-3 items-center spec-row">
+            <input type="text" name="spec_label_0" placeholder="Spec name (e.g., Material)" class="input-field w-48" />
+            <input type="text" name="spec_value_0" placeholder="Value" class="input-field flex-1" />
+            <button type="button" class="remove-spec btn-danger btn-sm hidden">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" id="add-spec" class="mt-4 text-bobcat-600 hover:text-bobcat-700 font-medium flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add specification
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Pricing</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label for="price" class="label">Price ($) *</label>
+            <input type="number" id="price" name="price" step="0.01" min="0" class="input-field" required />
+          </div>
+
+          <div>
+            <label for="compareAtPrice" class="label">Compare at Price ($)</label>
+            <input type="number" id="compareAtPrice" name="compareAtPrice" step="0.01" min="0" class="input-field" />
+            <p class="text-xs text-warm-500 mt-1">Original price if on sale</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Organization</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label for="categoryId" class="label">Category</label>
+            <select id="categoryId" name="categoryId" class="input-field">
+              <option value="">Select category...</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="ghlProductId" class="label">GHL Product ID</label>
+            <input type="text" id="ghlProductId" name="ghlProductId" class="input-field" />
+            <p class="text-xs text-warm-500 mt-1">GoHighLevel product ID for checkout</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h2 class="font-display font-bold text-lg text-warm-900 mb-4">Status</h2>
+
+        <div class="space-y-4">
+          <label class="flex items-center gap-3">
+            <input type="checkbox" id="inStock" name="inStock" checked class="w-5 h-5 rounded border-warm-300 text-bobcat-600 focus:ring-bobcat-500" />
+            <span class="text-warm-800">In Stock</span>
+          </label>
+
+          <label class="flex items-center gap-3">
+            <input type="checkbox" id="featured" name="featured" class="w-5 h-5 rounded border-warm-300 text-bobcat-600 focus:ring-bobcat-500" />
+            <span class="text-warm-800">Featured Product</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="form-error" class="hidden bg-red-50 text-red-700 p-4 rounded-lg text-sm"></div>
+
+      <button type="submit" id="submit-btn" class="btn-primary w-full">
+        Create Product
+      </button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  import { createProduct, getAdminCategories } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) {
+    window.location.href = '/admin';
+  }
+
+  const form = document.getElementById('product-form') as HTMLFormElement;
+  const nameInput = document.getElementById('name') as HTMLInputElement;
+  const slugInput = document.getElementById('slug') as HTMLInputElement;
+  const categorySelect = document.getElementById('categoryId') as HTMLSelectElement;
+  const submitBtn = document.getElementById('submit-btn');
+  const formError = document.getElementById('form-error');
+
+  // Auto-generate slug from name
+  nameInput?.addEventListener('input', () => {
+    if (slugInput && !slugInput.dataset.manual) {
+      slugInput.value = nameInput.value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    }
+  });
+
+  slugInput?.addEventListener('input', () => {
+    slugInput.dataset.manual = 'true';
+  });
+
+  // Load categories
+  async function loadCategories() {
+    try {
+      const categories = await getAdminCategories();
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat._id;
+        option.textContent = cat.name;
+        categorySelect?.appendChild(option);
+      });
+    } catch (e) {
+      console.error('Failed to load categories');
+    }
+  }
+  loadCategories();
+
+  // Add image row
+  let imageCount = 1;
+  document.getElementById('add-image')?.addEventListener('click', () => {
+    const container = document.getElementById('images-container');
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 items-start image-row';
+    row.innerHTML = `
+      <input type="text" name="image_src_${imageCount}" placeholder="Image URL (Cloudinary)" class="input-field flex-1" />
+      <input type="text" name="image_alt_${imageCount}" placeholder="Alt text" class="input-field w-48" />
+      <button type="button" class="remove-image btn-danger btn-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    `;
+    container?.appendChild(row);
+    imageCount++;
+
+    row.querySelector('.remove-image')?.addEventListener('click', () => row.remove());
+  });
+
+  // Toggle variants section
+  const hasVariantsCheckbox = document.getElementById('hasVariants') as HTMLInputElement;
+  const variantsSection = document.getElementById('variants-section');
+  const priceInput = document.getElementById('price') as HTMLInputElement;
+
+  hasVariantsCheckbox?.addEventListener('change', () => {
+    if (hasVariantsCheckbox.checked) {
+      variantsSection?.classList.remove('hidden');
+      priceInput.removeAttribute('required');
+      priceInput.placeholder = 'Base price (optional with variants)';
+    } else {
+      variantsSection?.classList.add('hidden');
+      priceInput.setAttribute('required', 'true');
+      priceInput.placeholder = '';
+    }
+  });
+
+  // Add variant row
+  let variantCount = 1;
+  document.getElementById('add-variant')?.addEventListener('click', () => {
+    const container = document.getElementById('variants-container');
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 items-center variant-row bg-warm-50 p-3 rounded-lg';
+    row.innerHTML = `
+      <input type="text" name="variant_name_${variantCount}" placeholder="Variant name" class="input-field flex-1" />
+      <input type="text" name="variant_sku_${variantCount}" placeholder="SKU" class="input-field w-32" />
+      <input type="number" name="variant_price_${variantCount}" placeholder="Price" step="0.01" min="0" class="input-field w-28" />
+      <input type="number" name="variant_stock_${variantCount}" placeholder="Stock" min="0" class="input-field w-24" />
+      <button type="button" class="remove-variant btn-danger btn-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    `;
+    container?.appendChild(row);
+    variantCount++;
+
+    row.querySelector('.remove-variant')?.addEventListener('click', () => row.remove());
+  });
+
+  // Add spec row
+  let specCount = 1;
+  document.getElementById('add-spec')?.addEventListener('click', () => {
+    const container = document.getElementById('specs-container');
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 items-center spec-row';
+    row.innerHTML = `
+      <input type="text" name="spec_label_${specCount}" placeholder="Spec name" class="input-field w-48" />
+      <input type="text" name="spec_value_${specCount}" placeholder="Value" class="input-field flex-1" />
+      <button type="button" class="remove-spec btn-danger btn-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    `;
+    container?.appendChild(row);
+    specCount++;
+
+    row.querySelector('.remove-spec')?.addEventListener('click', () => row.remove());
+  });
+
+  // Form submission
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    formError?.classList.add('hidden');
+    if (submitBtn) {
+      submitBtn.textContent = 'Creating...';
+      submitBtn.setAttribute('disabled', 'true');
+    }
+
+    const formData = new FormData(form);
+
+    // Collect images
+    const images: { src: string; alt: string }[] = [];
+    for (let i = 0; i < 10; i++) {
+      const src = formData.get(`image_src_${i}`) as string;
+      const alt = formData.get(`image_alt_${i}`) as string;
+      if (src) {
+        images.push({ src, alt: alt || '' });
+      }
+    }
+
+    // Collect specs
+    const specs: { label: string; value: string }[] = [];
+    for (let i = 0; i < 20; i++) {
+      const label = formData.get(`spec_label_${i}`) as string;
+      const value = formData.get(`spec_value_${i}`) as string;
+      if (label && value) {
+        specs.push({ label, value });
+      }
+    }
+
+    // Collect variants
+    const variants: { name: string; sku?: string; price: number; stock?: number }[] = [];
+    const hasVariants = formData.get('hasVariants') === 'on';
+    if (hasVariants) {
+      for (let i = 0; i < 50; i++) {
+        const name = formData.get(`variant_name_${i}`) as string;
+        const price = formData.get(`variant_price_${i}`) as string;
+        if (name && price) {
+          variants.push({
+            name,
+            sku: (formData.get(`variant_sku_${i}`) as string) || undefined,
+            price: parseFloat(price),
+            stock: formData.get(`variant_stock_${i}`) ? parseInt(formData.get(`variant_stock_${i}`) as string) : undefined,
+          });
+        }
+      }
+    }
+
+    const product = {
+      name: formData.get('name') as string,
+      slug: formData.get('slug') as string || undefined,
+      shortDescription: formData.get('shortDescription') as string,
+      description: formData.get('description') as string,
+      price: formData.get('price') ? parseFloat(formData.get('price') as string) : (variants[0]?.price || 0),
+      compareAtPrice: formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : undefined,
+      categoryId: formData.get('categoryId') as string || undefined,
+      ghlProductId: formData.get('ghlProductId') as string || undefined,
+      images,
+      specs,
+      variants: variants.length > 0 ? variants : undefined,
+      inStock: formData.get('inStock') === 'on',
+      featured: formData.get('featured') === 'on',
+    };
+
+    try {
+      await createProduct(product);
+      window.location.href = '/admin/products';
+    } catch (error: any) {
+      if (formError) {
+        formError.textContent = error.message || 'Failed to create product';
+        formError.classList.remove('hidden');
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.textContent = 'Create Product';
+        submitBtn.removeAttribute('disabled');
+      }
+    }
+  });
+</script>

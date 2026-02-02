@@ -1,0 +1,100 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Categories">
+  <div class="flex justify-between items-center mb-6">
+    <p class="text-warm-600">Organize your products into categories</p>
+    <a href="/admin/categories/new" class="btn-primary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Category
+    </a>
+  </div>
+
+  <div class="admin-card">
+    <div id="loading" class="text-center py-12 text-warm-500">
+      <div class="animate-spin w-8 h-8 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      Loading...
+    </div>
+
+    <div id="empty" class="hidden text-center py-12 text-warm-500">
+      <p class="mb-4">No categories yet</p>
+      <a href="/admin/categories/new" class="btn-primary btn-sm">Add your first category</a>
+    </div>
+
+    <table id="table" class="admin-table hidden">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Slug</th>
+          <th>Order</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<script>
+  import { getAdminCategories, deleteCategory } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) window.location.href = '/admin';
+
+  const loadingEl = document.getElementById('loading');
+  const emptyEl = document.getElementById('empty');
+  const tableEl = document.getElementById('table');
+  const listEl = document.getElementById('list');
+
+  async function load() {
+    try {
+      const items = await getAdminCategories();
+      loadingEl?.classList.add('hidden');
+
+      if (items.length === 0) {
+        emptyEl?.classList.remove('hidden');
+        return;
+      }
+
+      tableEl?.classList.remove('hidden');
+
+      if (listEl) {
+        listEl.innerHTML = items.map(item => `
+          <tr data-id="${item._id}">
+            <td class="font-semibold text-warm-900">${item.name}</td>
+            <td class="text-warm-500">${item.slug}</td>
+            <td>${item.order || 0}</td>
+            <td class="text-right">
+              <a href="/admin/categories/${item._id}" class="text-bobcat-600 hover:text-bobcat-700 font-medium mr-3">Edit</a>
+              <button class="delete-btn text-red-600 hover:text-red-700 font-medium" data-id="${item._id}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        listEl.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLElement).dataset.id;
+            if (!id || !confirm('Delete this category?')) return;
+            try {
+              await deleteCategory(id);
+              document.querySelector(`tr[data-id="${id}"]`)?.remove();
+              if (listEl.children.length === 0) {
+                tableEl?.classList.add('hidden');
+                emptyEl?.classList.remove('hidden');
+              }
+            } catch (error: any) {
+              alert(error.message);
+            }
+          });
+        });
+      }
+    } catch (error: any) {
+      loadingEl!.innerHTML = `<p class="text-red-600">${error.message}</p>`;
+    }
+  }
+
+  load();
+</script>

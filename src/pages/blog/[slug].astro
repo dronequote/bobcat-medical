@@ -1,0 +1,151 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { getBlogPostBySlug, getBlogPosts } from '@lib/api';
+import { marked } from 'marked';
+
+const { slug } = Astro.params;
+
+let post: any = null;
+
+try {
+  post = await getBlogPostBySlug(slug!);
+} catch (e) {
+  // Placeholder
+  const placeholders: Record<string, any> = {
+    '10-things-every-night-shift-nurse-needs': {
+      _id: '1',
+      title: '10 Things Every Night Shift Nurse Needs',
+      slug: '10-things-every-night-shift-nurse-needs',
+      excerpt: 'Essential gear and tips for surviving and thriving on the night shift.',
+      content: `
+## Working the night shift?
+
+Here are the essentials every night shift nurse needs to stay prepared and comfortable.
+
+### 1. A Great Stethoscope Holder
+
+Keep your stethoscope accessible without it falling off or getting in the way. Our magnetic stethoscope holder is perfect for quick access.
+
+### 2. Comfortable Compression Socks
+
+Your feet will thank you after a 12-hour shift.
+
+### 3. A Reliable Fanny Pack
+
+Keep your essentials organized and within reach at all times.
+
+### 4. Quality Snacks
+
+Pack healthy snacks to keep your energy up throughout the night.
+
+### 5. A Good Water Bottle
+
+Stay hydrated! It's easy to forget when you're busy.
+
+### 6. Blue Light Blocking Glasses
+
+Help protect your eyes during those bright hospital lights.
+
+### 7. Caffeine (In Moderation)
+
+A little pick-me-up can help, but don't overdo it.
+
+### 8. A Cozy Jacket
+
+Hospitals can get cold at night.
+
+### 9. Hand Cream
+
+All that hand washing takes a toll.
+
+### 10. A Positive Attitude
+
+The most important thing you can bring to any shift!
+      `,
+      author: 'Bobcat Medical Team',
+      publishedAt: '2026-01-15',
+      tags: ['Nursing Life', 'Night Shift', 'Gear Guide'],
+    },
+  };
+  post = placeholders[slug!];
+}
+
+if (!post) {
+  return Astro.redirect('/blog');
+}
+
+const formattedDate = post.publishedAt
+  ? new Date(post.publishedAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : null;
+
+// Parse markdown content
+const htmlContent = post.content ? await marked(post.content) : '';
+---
+
+<BaseLayout
+  title={post.title}
+  description={post.excerpt}
+  article={{
+    publishedTime: post.publishedAt,
+    author: post.author,
+    tags: post.tags,
+  }}
+>
+  <article>
+    <!-- Header -->
+    <header class="bg-bobcat-800 text-white py-16">
+      <div class="container-width max-w-4xl">
+        {post.tags && post.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-4">
+            {post.tags.map((tag: string) => (
+              <span class="text-sm bg-bobcat-600 px-3 py-1 rounded-full">{tag}</span>
+            ))}
+          </div>
+        )}
+        <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+          {post.title}
+        </h1>
+        <p class="text-bobcat-100 text-lg mb-6">{post.excerpt}</p>
+        <div class="flex items-center gap-4 text-bobcat-200">
+          <span>{post.author}</span>
+          {formattedDate && (
+            <>
+              <span>•</span>
+              <time datetime={post.publishedAt}>{formattedDate}</time>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- Cover Image -->
+    {post.coverImage && (
+      <div class="container-width max-w-4xl -mt-8">
+        <img
+          src={post.coverImage}
+          alt={post.title}
+          class="w-full rounded-2xl shadow-xl"
+        />
+      </div>
+    )}
+
+    <!-- Content -->
+    <div class="container-width max-w-4xl py-12">
+      <div class="prose prose-lg prose-warm max-w-none" set:html={htmlContent} />
+    </div>
+
+    <!-- Back to Blog -->
+    <div class="container-width max-w-4xl pb-16">
+      <a href="/blog" class="btn-secondary">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Blog
+      </a>
+    </div>
+  </article>
+</BaseLayout>

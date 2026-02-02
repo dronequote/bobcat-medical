@@ -1,0 +1,330 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Account"
+  description="Manage your Bobcat Medical account and view your order history."
+>
+  <section class="section-padding bg-warm-50 min-h-[70vh]">
+    <div class="container-width max-w-md">
+      <!-- Login Form (shown when not logged in) -->
+      <div id="login-section" class="bg-white rounded-2xl p-8 shadow-lg">
+        <div class="text-center mb-8">
+          <div class="w-16 h-16 bg-bobcat-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-bobcat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 class="font-display text-2xl font-bold text-warm-900">Account Login</h1>
+          <p class="text-warm-500 mt-2">Sign in to view your orders and account details</p>
+        </div>
+
+        <!-- Email Step -->
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label for="login-email" class="label">Email Address</label>
+            <input
+              type="email"
+              id="login-email"
+              placeholder="your@email.com"
+              class="input-field"
+              required
+            />
+          </div>
+
+          <div id="signup-fields" class="hidden space-y-4">
+            <div>
+              <label for="login-firstname" class="label">First Name</label>
+              <input
+                type="text"
+                id="login-firstname"
+                placeholder="First name"
+                class="input-field"
+              />
+            </div>
+            <div>
+              <label for="login-lastname" class="label">Last Name</label>
+              <input
+                type="text"
+                id="login-lastname"
+                placeholder="Last name"
+                class="input-field"
+              />
+            </div>
+          </div>
+
+          <div id="login-error" class="hidden bg-red-50 text-red-700 p-3 rounded-lg text-sm"></div>
+
+          <button type="submit" id="login-submit" class="btn-primary w-full">
+            Continue
+          </button>
+        </form>
+
+        <!-- Magic Link Sent -->
+        <div id="magic-link-sent" class="hidden text-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 class="font-display text-xl font-bold text-warm-900 mb-2">Check your email!</h2>
+          <p class="text-warm-500 mb-6">
+            We've sent a magic link to <span id="sent-to-email" class="font-semibold text-warm-700"></span>
+          </p>
+          <p class="text-sm text-warm-400">
+            Click the link in your email to sign in. The link expires in 1 hour.
+          </p>
+          <button id="resend-link" class="text-bobcat-600 hover:text-bobcat-700 font-medium mt-4">
+            Didn't receive it? Send again
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Dashboard (shown when logged in) -->
+      <div id="account-section" class="hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 bg-bobcat-100 rounded-full flex items-center justify-center">
+              <span id="user-initials" class="text-2xl font-bold text-bobcat-600"></span>
+            </div>
+            <div>
+              <h1 id="user-name" class="font-display text-2xl font-bold text-warm-900"></h1>
+              <p id="user-email" class="text-warm-500"></p>
+            </div>
+          </div>
+          <button id="logout-btn" class="text-red-600 hover:text-red-700 font-medium">
+            Sign out
+          </button>
+        </div>
+
+        <!-- Orders -->
+        <div class="bg-white rounded-2xl p-8 shadow-lg">
+          <h2 class="font-display text-xl font-bold text-warm-900 mb-6">Order History</h2>
+          <div id="orders-list">
+            <div class="text-center py-8 text-warm-500">
+              <svg class="w-12 h-12 mx-auto mb-4 text-warm-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              <p>Loading orders...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { requestMagicLink, NeedsSignupError, isLoggedIn, getUser, getOrders, logout } from '@lib/auth';
+  import { requestAdminLogin, isAdminLoggedIn, getAdminUser, adminLogout } from '@lib/admin-auth';
+
+  const loginSection = document.getElementById('login-section');
+  const accountSection = document.getElementById('account-section');
+  const loginForm = document.getElementById('login-form') as HTMLFormElement;
+  const signupFields = document.getElementById('signup-fields');
+  const loginEmail = document.getElementById('login-email') as HTMLInputElement;
+  const loginFirstname = document.getElementById('login-firstname') as HTMLInputElement;
+  const loginLastname = document.getElementById('login-lastname') as HTMLInputElement;
+  const loginError = document.getElementById('login-error');
+  const loginSubmit = document.getElementById('login-submit');
+  const magicLinkSent = document.getElementById('magic-link-sent');
+  const sentToEmail = document.getElementById('sent-to-email');
+  const resendLink = document.getElementById('resend-link');
+
+  const userName = document.getElementById('user-name');
+  const userEmail = document.getElementById('user-email');
+  const userInitials = document.getElementById('user-initials');
+  const ordersList = document.getElementById('orders-list');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  let needsSignup = false;
+  let currentEmail = '';
+  let isAdmin = false;
+
+  function showLogin() {
+    loginSection?.classList.remove('hidden');
+    accountSection?.classList.add('hidden');
+  }
+
+  function showAccount() {
+    loginSection?.classList.add('hidden');
+    accountSection?.classList.remove('hidden');
+
+    // Check if admin
+    if (isAdminLoggedIn()) {
+      isAdmin = true;
+      const admin = getAdminUser();
+      if (admin) {
+        if (userName) userName.textContent = `${admin.firstName} ${admin.lastName}`;
+        if (userEmail) userEmail.textContent = admin.email;
+        if (userInitials) userInitials.textContent = `${admin.firstName[0] || 'A'}${admin.lastName[0] || 'D'}`;
+      }
+      // Show admin link
+      showAdminLink();
+    } else {
+      const user = getUser();
+      if (user) {
+        if (userName) userName.textContent = `${user.firstName} ${user.lastName}`;
+        if (userEmail) userEmail.textContent = user.email;
+        if (userInitials) userInitials.textContent = `${user.firstName[0]}${user.lastName[0]}`;
+      }
+    }
+
+    loadOrders();
+  }
+
+  function showAdminLink() {
+    const accountCard = document.querySelector('#account-section > div:first-child');
+    if (accountCard && !document.getElementById('admin-link')) {
+      const adminLink = document.createElement('a');
+      adminLink.id = 'admin-link';
+      adminLink.href = '/admin';
+      adminLink.className = 'inline-block mt-4 bg-bobcat-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-bobcat-700 transition-colors';
+      adminLink.textContent = '🛠 Admin Dashboard';
+      accountCard.querySelector('button')?.before(adminLink);
+      accountCard.querySelector('button')?.classList.add('ml-4');
+    }
+  }
+
+  async function loadOrders() {
+    if (!ordersList) return;
+
+    try {
+      const orders = await getOrders();
+
+      if (orders.length === 0) {
+        ordersList.innerHTML = `
+          <div class="text-center py-8 text-warm-500">
+            <svg class="w-12 h-12 mx-auto mb-4 text-warm-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p>No orders yet</p>
+            <a href="/shop" class="text-bobcat-600 hover:text-bobcat-700 font-medium mt-2 inline-block">Start shopping</a>
+          </div>
+        `;
+        return;
+      }
+
+      ordersList.innerHTML = orders.map(order => `
+        <div class="border-b border-warm-100 py-4 last:border-0">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="font-semibold text-warm-900">#${order._id.slice(-8).toUpperCase()}</span>
+              <span class="text-sm text-warm-500 ml-2">${new Date(order.createdAt).toLocaleDateString()}</span>
+            </div>
+            <span class="text-sm font-medium ${order.status === 'paid' ? 'text-green-600' : order.status === 'pending' ? 'text-yellow-600' : 'text-warm-500'}">
+              ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+            </span>
+          </div>
+          <div class="text-sm text-warm-600">
+            ${order.items.map((item: any) => `${item.name} x ${item.quantity}`).join(', ')}
+          </div>
+          <div class="font-semibold text-bobcat-600 mt-1">$${(order.total / 100).toFixed(2)}</div>
+        </div>
+      `).join('');
+
+    } catch (e) {
+      ordersList.innerHTML = `
+        <div class="text-center py-8 text-warm-500">
+          <p>Unable to load orders</p>
+        </div>
+      `;
+    }
+  }
+
+  // Check if already logged in (admin or customer)
+  if (isAdminLoggedIn() || isLoggedIn()) {
+    showAccount();
+  } else {
+    showLogin();
+  }
+
+  // Unified login - try admin first, then customer
+  async function unifiedLogin(email: string, firstName?: string, lastName?: string) {
+    // Try admin login first
+    try {
+      await requestAdminLogin(email);
+      return { success: true, type: 'admin' };
+    } catch (adminError: any) {
+      // Admin login failed (not an admin), try customer login
+      try {
+        await requestMagicLink(email, firstName, lastName);
+        return { success: true, type: 'customer' };
+      } catch (customerError: any) {
+        throw customerError; // Re-throw customer error
+      }
+    }
+  }
+
+  // Login form submission
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = loginEmail?.value?.trim();
+    if (!email) return;
+
+    currentEmail = email;
+
+    if (loginError) loginError.classList.add('hidden');
+    if (loginSubmit) {
+      loginSubmit.textContent = 'Sending...';
+      loginSubmit.setAttribute('disabled', 'true');
+    }
+
+    try {
+      await unifiedLogin(
+        email,
+        needsSignup ? loginFirstname?.value : undefined,
+        needsSignup ? loginLastname?.value : undefined
+      );
+
+      // Show success message
+      loginForm.classList.add('hidden');
+      magicLinkSent?.classList.remove('hidden');
+      if (sentToEmail) sentToEmail.textContent = email;
+
+    } catch (error: any) {
+      if (error instanceof NeedsSignupError) {
+        // Show signup fields
+        needsSignup = true;
+        signupFields?.classList.remove('hidden');
+        if (loginSubmit) loginSubmit.textContent = 'Sign Up & Continue';
+        loginFirstname?.focus();
+      } else {
+        if (loginError) {
+          loginError.textContent = error.message || 'Something went wrong';
+          loginError.classList.remove('hidden');
+        }
+      }
+    } finally {
+      if (loginSubmit) {
+        if (!needsSignup) loginSubmit.textContent = 'Continue';
+        loginSubmit.removeAttribute('disabled');
+      }
+    }
+  });
+
+  // Resend link
+  resendLink?.addEventListener('click', async () => {
+    if (!currentEmail) return;
+
+    try {
+      await requestMagicLink(currentEmail);
+      resendLink.textContent = 'Link sent!';
+      setTimeout(() => {
+        resendLink.textContent = "Didn't receive it? Send again";
+      }, 3000);
+    } catch (e) {
+      resendLink.textContent = 'Failed to resend';
+    }
+  });
+
+  // Logout - clear both admin and customer tokens
+  logoutBtn?.addEventListener('click', () => {
+    logout();
+    adminLogout();
+    showLogin();
+    window.location.reload();
+  });
+</script>

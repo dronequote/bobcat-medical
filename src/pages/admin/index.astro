@@ -1,0 +1,215 @@
+---
+// Admin login page (shows login form) or redirects to dashboard
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | Bobcat Medical</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        background: linear-gradient(135deg, #064343 0%, #0b7676 50%, #0d8f8f 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .container {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 3rem;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+      }
+      .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: #0d8f8f;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+      }
+      .logo-text {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #292524;
+      }
+      .subtitle {
+        text-align: center;
+        color: #78716c;
+        margin-bottom: 2rem;
+      }
+      .form-group { margin-bottom: 1.5rem; }
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #44403c;
+        margin-bottom: 0.5rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid #d6d3d1;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.2s;
+      }
+      input:focus {
+        outline: none;
+        border-color: #0d8f8f;
+        box-shadow: 0 0 0 3px rgba(13, 143, 143, 0.1);
+      }
+      button {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        background: #0d8f8f;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover { background: #0b7676; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .error {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .success {
+        text-align: center;
+        display: none;
+      }
+      .success-icon {
+        width: 64px;
+        height: 64px;
+        background: #dcfce7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+      }
+      .success h2 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        color: #292524;
+        margin-bottom: 0.5rem;
+      }
+      .success p { color: #78716c; font-size: 0.875rem; }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #0d8f8f;
+        text-decoration: none;
+        font-size: 0.875rem;
+      }
+      .back-link:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <div class="logo-icon">B</div>
+        <span class="logo-text">Bobcat Medical</span>
+      </div>
+      <p class="subtitle">Admin Dashboard</p>
+
+      <!-- Login Form -->
+      <form id="login-form">
+        <div id="error" class="error"></div>
+
+        <div class="form-group">
+          <label for="email">Admin Email</label>
+          <input type="email" id="email" placeholder="admin@example.com" required />
+        </div>
+
+        <button type="submit" id="submit-btn">Send Login Link</button>
+      </form>
+
+      <!-- Success Message -->
+      <div id="success" class="success">
+        <div class="success-icon">
+          <svg width="32" height="32" fill="none" stroke="#16a34a" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2>Check your email!</h2>
+        <p>We've sent a login link to <strong id="sent-email"></strong></p>
+      </div>
+
+      <a href="/" class="back-link">&larr; Back to website</a>
+    </div>
+
+    <script type="module">
+      import { isAdminLoggedIn, requestAdminLogin } from '/src/lib/admin-auth.ts';
+
+      // Check if already logged in
+      if (isAdminLoggedIn()) {
+        window.location.href = '/admin/products';
+      }
+
+      const form = document.getElementById('login-form');
+      const errorEl = document.getElementById('error');
+      const successEl = document.getElementById('success');
+      const submitBtn = document.getElementById('submit-btn');
+      const sentEmail = document.getElementById('sent-email');
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value?.trim();
+        if (!email) return;
+
+        errorEl.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        try {
+          await requestAdminLogin(email);
+
+          form.style.display = 'none';
+          successEl.style.display = 'block';
+          sentEmail.textContent = email;
+
+        } catch (error) {
+          errorEl.textContent = error.message || 'Failed to send login link';
+          errorEl.style.display = 'block';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Login Link';
+        }
+      });
+    </script>
+  </body>
+</html>

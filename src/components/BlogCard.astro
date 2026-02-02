@@ -1,0 +1,63 @@
+---
+interface Props {
+  title: string;
+  slug: string;
+  excerpt: string;
+  coverImage?: string;
+  author: string;
+  publishedAt?: string;
+  tags?: string[];
+}
+
+const { title, slug, excerpt, coverImage, author, publishedAt, tags } = Astro.props;
+
+const formattedDate = publishedAt
+  ? new Date(publishedAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : null;
+---
+
+<article class="card overflow-hidden group">
+  <a href={`/blog/${slug}`} class="block">
+    <div class="aspect-video bg-warm-100 overflow-hidden">
+      {coverImage ? (
+        <img
+          src={coverImage}
+          alt={title}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center text-warm-400">
+          <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+        </div>
+      )}
+    </div>
+  </a>
+  <div class="p-6">
+    {tags && tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-3">
+        {tags.slice(0, 3).map((tag) => (
+          <span class="text-xs bg-bobcat-50 text-bobcat-600 px-2 py-1 rounded-full">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+    <h3 class="font-display text-xl font-bold text-warm-900 mb-2">
+      <a href={`/blog/${slug}`} class="hover:text-bobcat-600 transition-colors">
+        {title}
+      </a>
+    </h3>
+    <p class="text-warm-600 text-sm mb-4 line-clamp-2">{excerpt}</p>
+    <div class="flex items-center justify-between text-sm text-warm-500">
+      <span>{author}</span>
+      {formattedDate && <span>{formattedDate}</span>}
+    </div>
+  </div>
+</article>

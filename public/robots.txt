@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bobcatmedical.com/sitemap-index.xml
+
+# Block admin and auth pages
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/

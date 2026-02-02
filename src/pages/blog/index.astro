@@ -1,0 +1,89 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import BlogCard from '@components/BlogCard.astro';
+import { getBlogPosts } from '@lib/api';
+
+let posts: any[] = [];
+
+try {
+  posts = await getBlogPosts();
+} catch (e) {
+  // Placeholder posts
+  posts = [
+    {
+      _id: '1',
+      title: '10 Things Every Night Shift Nurse Needs',
+      slug: '10-things-every-night-shift-nurse-needs',
+      excerpt: 'Essential gear and tips for surviving and thriving on the night shift. From stethoscope holders to self-care essentials.',
+      author: 'Bobcat Medical Team',
+      publishedAt: '2026-01-15',
+      tags: ['Nursing Life', 'Night Shift', 'Gear Guide'],
+    },
+    {
+      _id: '2',
+      title: 'The Best Ways to Keep Your Stethoscope Accessible',
+      slug: 'best-ways-to-keep-stethoscope-accessible',
+      excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
+      author: 'Bobcat Medical Team',
+      publishedAt: '2026-01-10',
+      tags: ['Gear Guide', 'Product Review'],
+    },
+    {
+      _id: '3',
+      title: 'Why Magnetic Stethoscope Holders Are Better',
+      slug: 'why-magnetic-stethoscope-holders-are-better',
+      excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
+      author: 'Bobcat Medical Team',
+      publishedAt: '2026-01-05',
+      tags: ['Product Spotlight', 'Gear Guide'],
+    },
+  ];
+}
+
+// Only show published posts
+const publishedPosts = posts.filter(p => p.published !== false);
+---
+
+<BaseLayout
+  title="Blog"
+  description="Nursing stories, gear guides, and tips for healthcare professionals from Bobcat Medical."
+>
+  <!-- Hero -->
+  <section class="bg-bobcat-800 text-white py-16">
+    <div class="container-width text-center">
+      <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">Blog</h1>
+      <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
+        Stories, tips, and insights for healthcare professionals
+      </p>
+    </div>
+  </section>
+
+  <!-- Blog Posts -->
+  <section class="section-padding bg-warm-50">
+    <div class="container-width">
+      {publishedPosts.length > 0 ? (
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {publishedPosts.map((post) => (
+            <BlogCard
+              title={post.title}
+              slug={post.slug}
+              excerpt={post.excerpt}
+              coverImage={post.coverImage}
+              author={post.author}
+              publishedAt={post.publishedAt}
+              tags={post.tags}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16">
+          <svg class="w-16 h-16 text-warm-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+          <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No posts yet</h2>
+          <p class="text-warm-500">Check back soon for nursing stories and tips!</p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

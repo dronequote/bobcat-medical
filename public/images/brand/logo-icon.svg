@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <!-- Background rounded rectangle -->
+  <rect x="2" y="2" width="40" height="40" rx="8" fill="#0d8f8f"/>
+
+  <!-- Stylized B -->
+  <path d="M12 12h10c3.5 0 6 1.8 6 5s-2 4.5-4.5 5c3.5 0.5 6 2.5 6 6s-2.5 6-6.5 6H12V12z" fill="white"/>
+  <path d="M17 16v5h4.5c2 0 3-1 3-2.5s-1-2.5-3-2.5h-4.5z" fill="#0d8f8f"/>
+  <path d="M17 25v5h5.5c2 0 3.5-1 3.5-2.5s-1.5-2.5-3.5-2.5h-5.5z" fill="#0d8f8f"/>
+
+  <!-- Small medical cross accent -->
+  <rect x="32" y="6" width="6" height="2" rx="1" fill="#FF6B5B"/>
+  <rect x="34" y="4" width="2" height="6" rx="1" fill="#FF6B5B"/>
+</svg>

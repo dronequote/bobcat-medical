@@ -1,0 +1,457 @@
+---
+// Floating cart button with slide-out panel and checkout modal
+---
+
+<!-- Floating Cart Button -->
+<button
+  id="cart-button"
+  type="button"
+  class="fixed bottom-6 right-6 z-40 bg-bobcat-600 hover:bg-bobcat-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200"
+  aria-label="Open shopping cart"
+>
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+  </svg>
+  <span
+    id="cart-count"
+    class="absolute -top-1 -right-1 bg-coral-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center hidden"
+  >
+    0
+  </span>
+</button>
+
+<!-- Cart Panel Overlay -->
+<div
+  id="cart-overlay"
+  class="fixed inset-0 bg-black/50 z-50 hidden opacity-0 transition-opacity duration-300"
+></div>
+
+<!-- Cart Panel -->
+<div
+  id="cart-panel"
+  class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between p-4 border-b border-warm-200 bg-bobcat-600 text-white">
+    <h2 class="font-display text-xl font-bold">Your Cart</h2>
+    <button
+      id="cart-close"
+      type="button"
+      class="p-2 hover:bg-bobcat-700 rounded-lg transition-colors"
+      aria-label="Close cart"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Cart Items -->
+  <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <!-- Items rendered by JavaScript -->
+  </div>
+
+  <!-- Empty Cart Message -->
+  <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-8 text-center hidden">
+    <svg class="w-16 h-16 text-warm-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+    <p class="text-warm-500 mb-4">Your cart is empty</p>
+    <a href="/shop" class="btn-primary text-sm">Browse Products</a>
+  </div>
+
+  <!-- Footer with Total & Checkout -->
+  <div id="cart-footer" class="border-t border-warm-200 p-4 bg-warm-50 space-y-4">
+    <div class="flex justify-between items-center">
+      <span class="font-semibold text-warm-700">Subtotal:</span>
+      <span id="cart-total" class="font-display text-2xl font-bold text-bobcat-600">$0</span>
+    </div>
+    <button
+      id="checkout-btn"
+      type="button"
+      class="btn-primary w-full text-center"
+    >
+      Proceed to Checkout
+    </button>
+    <button
+      id="clear-cart-btn"
+      type="button"
+      class="w-full text-center text-sm text-warm-500 hover:text-red-600 transition-colors py-2"
+    >
+      Clear Cart
+    </button>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div
+  id="checkout-modal"
+  class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/50"
+>
+  <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+    <!-- Email Form Step -->
+    <div id="checkout-step-email">
+      <div class="p-6 border-b border-warm-200">
+        <h3 class="font-display text-xl font-bold text-warm-900">Checkout</h3>
+        <p class="text-sm text-warm-500 mt-1">Enter your details to complete your order</p>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div id="checkout-summary" class="bg-warm-50 rounded-xl p-4 space-y-2">
+          <!-- Order summary rendered by JS -->
+        </div>
+
+        <div class="border-t border-warm-200 pt-4">
+          <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold text-warm-700">Total:</span>
+            <span id="checkout-total" class="font-display text-2xl font-bold text-bobcat-600">$0</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="checkout-email" class="label">
+            Email Address <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="checkout-email"
+            placeholder="your@email.com"
+            class="input-field"
+            required
+          />
+        </div>
+
+        <div>
+          <label for="checkout-name" class="label">
+            Name (optional)
+          </label>
+          <input
+            type="text"
+            id="checkout-name"
+            placeholder="Your name"
+            class="input-field"
+          />
+        </div>
+
+        <div id="checkout-error" class="hidden bg-red-50 text-red-700 p-3 rounded-lg text-sm"></div>
+      </div>
+
+      <div class="p-6 border-t border-warm-200 bg-warm-50 flex gap-3">
+        <button id="checkout-back" type="button" class="btn-secondary flex-1">
+          Back
+        </button>
+        <button id="checkout-pay" type="button" class="btn-primary flex-1">
+          Continue to Payment
+        </button>
+      </div>
+    </div>
+
+    <!-- Processing Step -->
+    <div id="checkout-step-processing" class="hidden p-12 text-center">
+      <div class="animate-spin w-12 h-12 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      <h3 class="font-display text-xl font-bold text-warm-900">Processing...</h3>
+      <p class="text-warm-500 mt-2">Creating your secure checkout</p>
+    </div>
+
+    <!-- Payment Iframe Step -->
+    <div id="checkout-step-payment" class="hidden">
+      <div class="p-4 border-b border-warm-200 bg-bobcat-600 text-white flex items-center justify-between">
+        <h3 class="font-display font-bold">Complete Payment</h3>
+        <button id="checkout-close-payment" type="button" class="p-2 hover:bg-bobcat-700 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <iframe
+        id="checkout-payment-iframe"
+        src=""
+        class="w-full h-[500px] border-0"
+        allow="payment"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { getCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount } from '@lib/cart';
+  import { createCheckout } from '@lib/api';
+  import type { Cart, CartItem } from '@lib/cart';
+
+  // DOM Elements
+  const cartButton = document.getElementById('cart-button');
+  const cartCount = document.getElementById('cart-count');
+  const cartOverlay = document.getElementById('cart-overlay');
+  const cartPanel = document.getElementById('cart-panel');
+  const cartClose = document.getElementById('cart-close');
+  const cartItems = document.getElementById('cart-items');
+  const cartEmpty = document.getElementById('cart-empty');
+  const cartFooter = document.getElementById('cart-footer');
+  const cartTotal = document.getElementById('cart-total');
+  const checkoutBtn = document.getElementById('checkout-btn');
+  const clearCartBtn = document.getElementById('clear-cart-btn');
+
+  // Checkout modal elements
+  const checkoutModal = document.getElementById('checkout-modal');
+  const checkoutStepEmail = document.getElementById('checkout-step-email');
+  const checkoutStepProcessing = document.getElementById('checkout-step-processing');
+  const checkoutStepPayment = document.getElementById('checkout-step-payment');
+  const checkoutSummary = document.getElementById('checkout-summary');
+  const checkoutTotalEl = document.getElementById('checkout-total');
+  const checkoutEmail = document.getElementById('checkout-email') as HTMLInputElement;
+  const checkoutName = document.getElementById('checkout-name') as HTMLInputElement;
+  const checkoutError = document.getElementById('checkout-error');
+  const checkoutBack = document.getElementById('checkout-back');
+  const checkoutPay = document.getElementById('checkout-pay');
+  const checkoutPaymentIframe = document.getElementById('checkout-payment-iframe') as HTMLIFrameElement;
+  const checkoutClosePayment = document.getElementById('checkout-close-payment');
+
+  function renderCartItem(item: CartItem): string {
+    const priceIdAttr = item.ghlPriceId ? `data-ghl-price-id="${item.ghlPriceId}"` : '';
+    // Split name to show product and variant separately
+    const nameParts = item.name.split(' - ');
+    const productName = nameParts[0];
+    const variantName = nameParts.length > 1 ? nameParts.slice(1).join(' - ') : '';
+
+    return `
+      <div class="flex gap-4 bg-warm-50 rounded-xl p-4" data-product-id="${item.productId}" ${priceIdAttr}>
+        <div class="w-16 h-16 bg-warm-200 rounded-lg flex-shrink-0 overflow-hidden">
+          ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover" />` : ''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-semibold text-warm-900 text-sm leading-tight">${productName}</h4>
+          ${variantName ? `<p class="text-xs text-bobcat-600 font-medium mt-0.5">${variantName}</p>` : ''}
+          <p class="font-display font-bold text-bobcat-600 mt-1">$${item.price.toFixed(2)}</p>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <button class="remove-item text-warm-400 hover:text-red-500 transition-colors p-1" data-product-id="${item.productId}" ${priceIdAttr}>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <div class="flex items-center gap-2 bg-white rounded-lg border border-warm-200">
+            <button class="quantity-btn p-2 hover:bg-warm-100 rounded-l-lg" data-product-id="${item.productId}" ${priceIdAttr} data-action="decrease">-</button>
+            <span class="w-8 text-center font-semibold">${item.quantity}</span>
+            <button class="quantity-btn p-2 hover:bg-warm-100 rounded-r-lg" data-product-id="${item.productId}" ${priceIdAttr} data-action="increase">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateCartUI() {
+    const cart = getCart();
+    const itemCount = getCartItemCount(cart);
+    const total = getCartTotal(cart);
+
+    if (cartCount) {
+      if (itemCount > 0) {
+        cartCount.textContent = itemCount.toString();
+        cartCount.classList.remove('hidden');
+      } else {
+        cartCount.classList.add('hidden');
+      }
+    }
+
+    if (cartItems && cartEmpty && cartFooter) {
+      if (cart.items.length > 0) {
+        cartItems.innerHTML = cart.items.map(renderCartItem).join('');
+        cartItems.classList.remove('hidden');
+        cartEmpty.classList.add('hidden');
+        cartFooter.classList.remove('hidden');
+
+        // Add event listeners
+        cartItems.querySelectorAll('.remove-item').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const el = e.currentTarget as HTMLElement;
+            const productId = el.dataset.productId;
+            const ghlPriceId = el.dataset.ghlPriceId;
+            if (productId) {
+              removeFromCart(productId, ghlPriceId);
+              updateCartUI();
+            }
+          });
+        });
+
+        cartItems.querySelectorAll('.quantity-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const button = e.currentTarget as HTMLElement;
+            const productId = button.dataset.productId;
+            const ghlPriceId = button.dataset.ghlPriceId;
+            const action = button.dataset.action;
+            if (productId) {
+              const cart = getCart();
+              const item = cart.items.find(i =>
+                i.productId === productId && (i.ghlPriceId || '') === (ghlPriceId || '')
+              );
+              if (item) {
+                const newQty = action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+                updateQuantity(productId, newQty, ghlPriceId);
+                updateCartUI();
+              }
+            }
+          });
+        });
+      } else {
+        cartItems.innerHTML = '';
+        cartItems.classList.add('hidden');
+        cartEmpty.classList.remove('hidden');
+        cartFooter.classList.add('hidden');
+      }
+    }
+
+    if (cartTotal) {
+      cartTotal.textContent = `$${total.toFixed(2)}`;
+    }
+  }
+
+  function openCart() {
+    updateCartUI();
+    cartOverlay?.classList.remove('hidden');
+    setTimeout(() => {
+      cartOverlay?.classList.remove('opacity-0');
+      cartPanel?.classList.remove('translate-x-full');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCart() {
+    cartOverlay?.classList.add('opacity-0');
+    cartPanel?.classList.add('translate-x-full');
+    setTimeout(() => {
+      cartOverlay?.classList.add('hidden');
+    }, 300);
+    document.body.style.overflow = '';
+  }
+
+  function openCheckout() {
+    const cart = getCart();
+    if (cart.items.length === 0) return;
+
+    closeCart();
+
+    if (checkoutSummary) {
+      checkoutSummary.innerHTML = cart.items.map(item => {
+        const nameParts = item.name.split(' - ');
+        const productName = nameParts[0];
+        const variantName = nameParts.length > 1 ? nameParts.slice(1).join(' - ') : '';
+        return `
+          <div class="flex justify-between items-start gap-2 py-1">
+            <div class="flex-1">
+              <span class="text-warm-800 font-medium">${productName}</span>
+              ${variantName ? `<span class="text-bobcat-600 text-sm"> (${variantName})</span>` : ''}
+              <span class="text-warm-500 text-sm"> x ${item.quantity}</span>
+            </div>
+            <span class="font-semibold text-warm-900 whitespace-nowrap">$${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (checkoutTotalEl) {
+      checkoutTotalEl.textContent = `$${getCartTotal(cart).toFixed(2)}`;
+    }
+
+    showCheckoutStep('email');
+    checkoutModal?.classList.remove('hidden');
+    checkoutModal?.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCheckout() {
+    checkoutModal?.classList.add('hidden');
+    checkoutModal?.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  function showCheckoutStep(step: 'email' | 'processing' | 'payment') {
+    checkoutStepEmail?.classList.toggle('hidden', step !== 'email');
+    checkoutStepProcessing?.classList.toggle('hidden', step !== 'processing');
+    checkoutStepPayment?.classList.toggle('hidden', step !== 'payment');
+  }
+
+  async function processCheckout() {
+    const email = checkoutEmail?.value?.trim();
+    const name = checkoutName?.value?.trim();
+    const cart = getCart();
+
+    if (!email || !email.includes('@')) {
+      if (checkoutError) {
+        checkoutError.textContent = 'Please enter a valid email address';
+        checkoutError.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (checkoutError) checkoutError.classList.add('hidden');
+    showCheckoutStep('processing');
+
+    const items = cart.items.map(item => ({
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      ghlProductId: item.ghlProductId,
+      ghlPriceId: item.ghlPriceId,
+    }));
+
+    try {
+      const result = await createCheckout({
+        items,
+        customerEmail: email,
+        customerName: name || undefined,
+      });
+
+      if (checkoutPaymentIframe && result.paymentUrl) {
+        checkoutPaymentIframe.src = result.paymentUrl;
+      }
+      showCheckoutStep('payment');
+
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      showCheckoutStep('email');
+      if (checkoutError) {
+        checkoutError.textContent = error.message || 'Failed to process checkout. Please try again.';
+        checkoutError.classList.remove('hidden');
+      }
+    }
+  }
+
+  // Event listeners
+  cartButton?.addEventListener('click', openCart);
+  cartClose?.addEventListener('click', closeCart);
+  cartOverlay?.addEventListener('click', closeCart);
+  checkoutBtn?.addEventListener('click', openCheckout);
+  checkoutBack?.addEventListener('click', () => {
+    closeCheckout();
+    setTimeout(openCart, 100);
+  });
+  checkoutPay?.addEventListener('click', processCheckout);
+  checkoutClosePayment?.addEventListener('click', () => {
+    clearCart();
+    updateCartUI();
+    closeCheckout();
+  });
+  clearCartBtn?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear your cart?')) {
+      clearCart();
+      updateCartUI();
+    }
+  });
+
+  // Listen for cart updates from other components
+  window.addEventListener('cart-updated', () => updateCartUI());
+
+  // Listen for open-cart events
+  window.addEventListener('open-cart', () => openCart());
+
+  // Escape key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCart();
+      closeCheckout();
+    }
+  });
+
+  // Initial update
+  updateCartUI();
+</script>

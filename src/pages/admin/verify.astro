@@ -1,0 +1,151 @@
+---
+// Admin magic link verification page
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verifying... | Bobcat Medical Admin</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        background: linear-gradient(135deg, #064343 0%, #0b7676 50%, #0d8f8f 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .container {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 3rem;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        text-align: center;
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e7e5e4;
+        border-top-color: #0d8f8f;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1.5rem;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        color: #292524;
+        margin-bottom: 0.5rem;
+      }
+      p { color: #78716c; }
+      .icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+      }
+      .icon.success { background: #dcfce7; }
+      .icon.error { background: #fef2f2; }
+      .hidden { display: none; }
+      a {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #0d8f8f;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+      }
+      a:hover { background: #0b7676; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Loading -->
+      <div id="loading">
+        <div class="spinner"></div>
+        <h1>Verifying...</h1>
+        <p>Please wait while we sign you in.</p>
+      </div>
+
+      <!-- Success -->
+      <div id="success" class="hidden">
+        <div class="icon success">
+          <svg width="32" height="32" fill="none" stroke="#16a34a" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1>Welcome back!</h1>
+        <p>Redirecting to dashboard...</p>
+      </div>
+
+      <!-- Error -->
+      <div id="error" class="hidden">
+        <div class="icon error">
+          <svg width="32" height="32" fill="none" stroke="#dc2626" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <h1>Verification Failed</h1>
+        <p id="error-message">The link is invalid or has expired.</p>
+        <a href="/admin">Try Again</a>
+      </div>
+    </div>
+
+    <script type="module">
+      import { verifyAdminLogin } from '/src/lib/admin-auth.ts';
+
+      const loadingEl = document.getElementById('loading');
+      const successEl = document.getElementById('success');
+      const errorEl = document.getElementById('error');
+      const errorMessage = document.getElementById('error-message');
+
+      // Get token from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      async function verify() {
+        if (!token) {
+          showError('No verification token provided.');
+          return;
+        }
+
+        try {
+          await verifyAdminLogin(token);
+          showSuccess();
+        } catch (error) {
+          showError(error.message || 'Verification failed. Please try again.');
+        }
+      }
+
+      function showSuccess() {
+        loadingEl?.classList.add('hidden');
+        successEl?.classList.remove('hidden');
+        setTimeout(() => {
+          window.location.href = '/admin/products';
+        }, 1500);
+      }
+
+      function showError(message) {
+        loadingEl?.classList.add('hidden');
+        errorEl?.classList.remove('hidden');
+        if (errorMessage) errorMessage.textContent = message;
+      }
+
+      verify();
+    </script>
+  </body>
+</html>

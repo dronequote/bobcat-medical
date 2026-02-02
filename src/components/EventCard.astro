@@ -1,0 +1,91 @@
+---
+interface Props {
+  title: string;
+  date: string;
+  endDate?: string;
+  location: string;
+  description: string;
+  image?: string;
+  registrationUrl?: string;
+  featured?: boolean;
+}
+
+const { title, date, endDate, location, description, image, registrationUrl, featured } = Astro.props;
+
+const startDate = new Date(date);
+const formattedStartDate = startDate.toLocaleDateString('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const formattedEndDate = endDate
+  ? new Date(endDate).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+    })
+  : null;
+
+const isPast = startDate < new Date();
+---
+
+<article class={`card overflow-hidden ${featured ? 'ring-2 ring-coral-500' : ''}`}>
+  {featured && (
+    <div class="bg-coral-500 text-white text-xs font-bold px-4 py-1 text-center">
+      Featured Event
+    </div>
+  )}
+  <div class="md:flex">
+    {image && (
+      <div class="md:w-1/3 aspect-video md:aspect-square bg-warm-100">
+        <img
+          src={image}
+          alt={title}
+          class="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+    )}
+    <div class={`p-6 ${image ? 'md:w-2/3' : ''}`}>
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-5 h-5 text-bobcat-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span class="text-sm font-medium text-bobcat-600">
+          {formattedStartDate}
+          {formattedEndDate && ` - ${formattedEndDate}`}
+        </span>
+        {isPast && (
+          <span class="text-xs bg-warm-200 text-warm-600 px-2 py-0.5 rounded">Past Event</span>
+        )}
+      </div>
+
+      <h3 class="font-display text-xl font-bold text-warm-900 mb-2">{title}</h3>
+
+      <div class="flex items-center gap-2 text-sm text-warm-500 mb-3">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>{location}</span>
+      </div>
+
+      <p class="text-warm-600 text-sm mb-4 line-clamp-2">{description}</p>
+
+      {registrationUrl && !isPast && (
+        <a
+          href={registrationUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary btn-sm"
+        >
+          Register Now
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      )}
+    </div>
+  </div>
+</article>

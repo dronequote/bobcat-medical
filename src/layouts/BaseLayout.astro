@@ -1,0 +1,151 @@
+---
+import Header from '@components/Header.astro';
+import Footer from '@components/Footer.astro';
+import CartButton from '@components/CartButton.astro';
+import '@fontsource/plus-jakarta-sans/400.css';
+import '@fontsource/plus-jakarta-sans/500.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/outfit/500.css';
+import '@fontsource/outfit/600.css';
+import '@fontsource/outfit/700.css';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article' | 'product';
+  noindex?: boolean;
+  article?: {
+    publishedTime: string;
+    author: string;
+    tags?: string[];
+  };
+  product?: {
+    price: number;
+    currency?: string;
+    availability?: 'InStock' | 'OutOfStock';
+  };
+}
+
+const {
+  title,
+  description = 'Bobcat Medical - Medical gear that works as hard as you do. Stethoscope holders, nurse accessories, and premium medical equipment for healthcare professionals.',
+  image = '/images/og-image.png',
+  type = 'website',
+  noindex = false,
+  article,
+  product,
+} = Astro.props;
+
+const siteUrl = 'https://bobcatmedical.com';
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const fullTitle = title === 'Home' ? 'Bobcat Medical | Medical Gear That Works As Hard As You Do' : `${title} | Bobcat Medical`;
+const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
+
+// Structured data for local business
+const businessSchema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  "name": "Bobcat Medical",
+  "description": "Medical gear that works as hard as you do. Premium stethoscope holders and nurse accessories.",
+  "url": siteUrl,
+  "logo": `${siteUrl}/images/logo.svg`,
+  "image": imageUrl,
+  "telephone": "+1-951-667-8045",
+  "email": "info@bobcatmedicalstore.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "31565 Vintners Pointe Ct",
+    "addressLocality": "Winchester",
+    "addressRegion": "CA",
+    "postalCode": "92596",
+    "addressCountry": "US"
+  },
+  "sameAs": []
+};
+
+// Product schema if product page
+const productSchema = product ? {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": title,
+  "description": description,
+  "image": imageUrl,
+  "brand": { "@type": "Brand", "name": "Bobcat Medical" },
+  "offers": {
+    "@type": "Offer",
+    "price": product.price,
+    "priceCurrency": product.currency || "USD",
+    "availability": `https://schema.org/${product.availability || 'InStock'}`
+  }
+} : null;
+
+// Article schema if blog post
+const articleSchema = article ? {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": title,
+  "description": description,
+  "image": imageUrl,
+  "datePublished": article.publishedTime,
+  "author": { "@type": "Person", "name": article.author }
+} : null;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>{fullTitle}</title>
+    <meta name="title" content={fullTitle} />
+    <meta name="description" content={description} />
+    <meta name="keywords" content="stethoscope holder, magnetic stethoscope holder, nurse accessories, medical gear, nursing supplies, healthcare accessories, Bobcat Medical" />
+    <meta name="author" content="Bobcat Medical" />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Bobcat Medical" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0d8f8f" />
+    <meta name="msapplication-TileColor" content="#0d8f8f" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
+    {productSchema && <script type="application/ld+json" set:html={JSON.stringify(productSchema)} />}
+    {articleSchema && <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />}
+  </head>
+  <body class="min-h-screen flex flex-col bg-warm-50 antialiased">
+    <Header />
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <Footer />
+    <CartButton />
+  </body>
+</html>

@@ -1,0 +1,111 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About"
+  description="Learn about Bobcat Medical - created by caregivers, for caregivers. Our mission is to provide quality medical accessories for healthcare professionals."
+>
+  <!-- Hero -->
+  <section class="bg-bobcat-800 text-white py-16">
+    <div class="container-width text-center">
+      <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">About Bobcat Medical</h1>
+      <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
+        Created by caregivers, for caregivers
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="section-padding bg-white">
+    <div class="container-width">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="font-display text-3xl font-bold text-warm-900 mb-6">
+            Medical Gear That Works As Hard As You Do
+          </h2>
+          <div class="prose prose-lg text-warm-600">
+            <p>
+              As healthcare professionals, you know the unique challenges you face every day. That's why this collection of accessories was created—to offer tools that are not only functional but also bring a touch of style and enjoyment to your daily routine.
+            </p>
+            <p>
+              Each piece is carefully curated to meet the high standards you expect in your demanding environment. Whether it's a secure stethoscope holder that keeps your essential tool within reach, or a well-organized fanny pack that carries everything you need, Bobcat Medical is here to make your workday a little easier.
+            </p>
+            <p>
+              We understand that you work long hours and face demanding situations. That's why we focus on creating products that are durable, practical, and designed with real healthcare workflows in mind.
+            </p>
+          </div>
+        </div>
+        <div class="relative">
+          <img
+            src="/images/about/healthcare-worker.jpg"
+            alt="Healthcare professional at work"
+            class="aspect-[4/3] w-full object-cover rounded-2xl shadow-lg"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="section-padding bg-warm-50">
+    <div class="container-width">
+      <h2 class="font-display text-3xl font-bold text-warm-900 text-center mb-12">
+        Our Values
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white rounded-2xl p-8 text-center">
+          <div class="w-16 h-16 bg-bobcat-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-bobcat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl font-bold text-warm-900 mb-2">Quality</h3>
+          <p class="text-warm-600">
+            Every product is built to withstand the demands of healthcare work.
+          </p>
+        </div>
+        <div class="bg-white rounded-2xl p-8 text-center">
+          <div class="w-16 h-16 bg-bobcat-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-bobcat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl font-bold text-warm-900 mb-2">Care</h3>
+          <p class="text-warm-600">
+            Created by caregivers who understand your daily challenges.
+          </p>
+        </div>
+        <div class="bg-white rounded-2xl p-8 text-center">
+          <div class="w-16 h-16 bg-bobcat-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-bobcat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl font-bold text-warm-900 mb-2">Practical</h3>
+          <p class="text-warm-600">
+            Designed for real workflows and actual use on the job.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section-padding bg-bobcat-600 text-white text-center">
+    <div class="container-width">
+      <h2 class="font-display text-3xl font-bold mb-4">
+        Ready to upgrade your gear?
+      </h2>
+      <p class="text-bobcat-100 text-lg mb-8 max-w-2xl mx-auto">
+        Shop our collection of premium medical accessories.
+      </p>
+      <a href="/shop" class="bg-white text-bobcat-700 hover:bg-warm-100 px-8 py-4 rounded-lg font-semibold transition-colors inline-flex items-center gap-2">
+        Shop Now
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

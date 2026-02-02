@@ -1,0 +1,138 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Products">
+  <div class="flex justify-between items-center mb-6">
+    <p class="text-warm-600">Manage your product catalog</p>
+    <a href="/admin/products/new" class="btn-primary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Product
+    </a>
+  </div>
+
+  <div class="admin-card">
+    <div id="products-loading" class="text-center py-12 text-warm-500">
+      <div class="animate-spin w-8 h-8 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      Loading products...
+    </div>
+
+    <div id="products-empty" class="hidden text-center py-12 text-warm-500">
+      <svg class="w-16 h-16 mx-auto mb-4 text-warm-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+      <p class="mb-4">No products yet</p>
+      <a href="/admin/products/new" class="btn-primary btn-sm">Add your first product</a>
+    </div>
+
+    <table id="products-table" class="admin-table hidden">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="products-list">
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<script>
+  import { getAdminProducts, deleteProduct } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) {
+    window.location.href = '/admin';
+  }
+
+  const loadingEl = document.getElementById('products-loading');
+  const emptyEl = document.getElementById('products-empty');
+  const tableEl = document.getElementById('products-table');
+  const listEl = document.getElementById('products-list');
+
+  async function loadProducts() {
+    try {
+      const products = await getAdminProducts();
+
+      loadingEl?.classList.add('hidden');
+
+      if (products.length === 0) {
+        emptyEl?.classList.remove('hidden');
+        return;
+      }
+
+      tableEl?.classList.remove('hidden');
+
+      if (listEl) {
+        listEl.innerHTML = products.map(p => `
+          <tr data-id="${p._id}">
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-warm-100 rounded-lg flex-shrink-0 overflow-hidden">
+                  ${p.images?.[0]?.src
+                    ? `<img src="${p.images[0].src}" alt="${p.name}" class="w-full h-full object-cover" />`
+                    : ''
+                  }
+                </div>
+                <div>
+                  <div class="font-semibold text-warm-900">${p.name}</div>
+                  <div class="text-xs text-warm-500">${p.slug}</div>
+                </div>
+              </div>
+            </td>
+            <td>${p.category?.name || '-'}</td>
+            <td class="font-semibold">$${p.price.toFixed(2)}</td>
+            <td>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                p.inStock !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }">
+                ${p.inStock !== false ? 'In Stock' : 'Out of Stock'}
+              </span>
+            </td>
+            <td class="text-right">
+              <a href="/admin/products/${p._id}" class="text-bobcat-600 hover:text-bobcat-700 font-medium mr-3">Edit</a>
+              <button class="delete-btn text-red-600 hover:text-red-700 font-medium" data-id="${p._id}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        // Add delete handlers
+        listEl.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLElement).dataset.id;
+            if (!id) return;
+
+            if (!confirm('Are you sure you want to delete this product?')) return;
+
+            try {
+              await deleteProduct(id);
+              document.querySelector(`tr[data-id="${id}"]`)?.remove();
+
+              // Check if table is now empty
+              if (listEl.children.length === 0) {
+                tableEl?.classList.add('hidden');
+                emptyEl?.classList.remove('hidden');
+              }
+            } catch (error: any) {
+              alert(error.message || 'Failed to delete product');
+            }
+          });
+        });
+      }
+    } catch (error: any) {
+      loadingEl?.classList.add('hidden');
+      if (listEl) {
+        listEl.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-600">Failed to load products: ${error.message}</td></tr>`;
+      }
+      tableEl?.classList.remove('hidden');
+    }
+  }
+
+  loadProducts();
+</script>

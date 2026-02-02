@@ -1,0 +1,111 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Blog Posts">
+  <div class="flex justify-between items-center mb-6">
+    <p class="text-warm-600">Manage your blog content</p>
+    <a href="/admin/blog/new" class="btn-primary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      New Post
+    </a>
+  </div>
+
+  <div class="admin-card">
+    <div id="loading" class="text-center py-12 text-warm-500">
+      <div class="animate-spin w-8 h-8 border-4 border-bobcat-200 border-t-bobcat-600 rounded-full mx-auto mb-4"></div>
+      Loading...
+    </div>
+
+    <div id="empty" class="hidden text-center py-12 text-warm-500">
+      <p class="mb-4">No blog posts yet</p>
+      <a href="/admin/blog/new" class="btn-primary btn-sm">Write your first post</a>
+    </div>
+
+    <table id="table" class="admin-table hidden">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+</AdminLayout>
+
+<script>
+  import { getAdminBlogPosts, deleteBlogPost } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) window.location.href = '/admin';
+
+  const loadingEl = document.getElementById('loading');
+  const emptyEl = document.getElementById('empty');
+  const tableEl = document.getElementById('table');
+  const listEl = document.getElementById('list');
+
+  async function load() {
+    try {
+      const items = await getAdminBlogPosts();
+      loadingEl?.classList.add('hidden');
+
+      if (items.length === 0) {
+        emptyEl?.classList.remove('hidden');
+        return;
+      }
+
+      tableEl?.classList.remove('hidden');
+
+      if (listEl) {
+        listEl.innerHTML = items.map(item => `
+          <tr data-id="${item._id}">
+            <td>
+              <div class="font-semibold text-warm-900">${item.title}</div>
+              <div class="text-xs text-warm-500">${item.slug}</div>
+            </td>
+            <td>${item.author}</td>
+            <td>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                item.published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+              }">
+                ${item.published ? 'Published' : 'Draft'}
+              </span>
+            </td>
+            <td class="text-warm-500">${item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : '-'}</td>
+            <td class="text-right">
+              <a href="/admin/blog/${item._id}" class="text-bobcat-600 hover:text-bobcat-700 font-medium mr-3">Edit</a>
+              <button class="delete-btn text-red-600 hover:text-red-700 font-medium" data-id="${item._id}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        listEl.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = (e.currentTarget as HTMLElement).dataset.id;
+            if (!id || !confirm('Delete this post?')) return;
+            try {
+              await deleteBlogPost(id);
+              document.querySelector(`tr[data-id="${id}"]`)?.remove();
+              if (listEl.children.length === 0) {
+                tableEl?.classList.add('hidden');
+                emptyEl?.classList.remove('hidden');
+              }
+            } catch (error: any) {
+              alert(error.message);
+            }
+          });
+        });
+      }
+    } catch (error: any) {
+      loadingEl!.innerHTML = `<p class="text-red-600">${error.message}</p>`;
+    }
+  }
+
+  load();
+</script>

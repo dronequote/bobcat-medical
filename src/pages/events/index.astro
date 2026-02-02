@@ -1,0 +1,101 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import EventCard from '@components/EventCard.astro';
+import { getEvents } from '@lib/api';
+
+let events: any[] = [];
+
+try {
+  events = await getEvents();
+} catch (e) {
+  // Placeholder events
+  events = [
+    {
+      _id: '1',
+      title: 'Nursing Expo April 2026',
+      slug: 'nursing-expo-april-2026',
+      date: '2026-04-15',
+      endDate: '2026-04-17',
+      location: 'Convention Center, CA',
+      description: 'Come visit us at booth #123! We\'ll be showcasing our latest products and offering exclusive discounts.',
+      featured: true,
+    },
+  ];
+}
+
+// Sort events by date (upcoming first)
+const sortedEvents = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+// Separate upcoming and past events
+const now = new Date();
+const upcomingEvents = sortedEvents.filter(e => new Date(e.date) >= now);
+const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
+---
+
+<BaseLayout
+  title="Events"
+  description="Find Bobcat Medical at nursing events, conferences, and expos. Meet our team and see our products in person."
+>
+  <!-- Hero -->
+  <section class="bg-bobcat-800 text-white py-16">
+    <div class="container-width text-center">
+      <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">Events</h1>
+      <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
+        Come meet us in person! Find Bobcat Medical at nursing events and conferences.
+      </p>
+    </div>
+  </section>
+
+  <!-- Upcoming Events -->
+  <section class="section-padding bg-warm-50">
+    <div class="container-width">
+      <h2 class="font-display text-2xl font-bold text-warm-900 mb-8">Upcoming Events</h2>
+
+      {upcomingEvents.length > 0 ? (
+        <div class="space-y-6">
+          {upcomingEvents.map((event) => (
+            <EventCard
+              title={event.title}
+              date={event.date}
+              endDate={event.endDate}
+              location={event.location}
+              description={event.description}
+              image={event.image}
+              registrationUrl={event.registrationUrl}
+              featured={event.featured}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12 bg-white rounded-2xl">
+          <svg class="w-16 h-16 text-warm-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 class="font-display text-xl font-bold text-warm-700 mb-2">No upcoming events</h3>
+          <p class="text-warm-500">Check back soon for new events!</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Past Events -->
+  {pastEvents.length > 0 && (
+    <section class="section-padding bg-white">
+      <div class="container-width">
+        <h2 class="font-display text-2xl font-bold text-warm-900 mb-8">Past Events</h2>
+        <div class="space-y-6 opacity-75">
+          {pastEvents.map((event) => (
+            <EventCard
+              title={event.title}
+              date={event.date}
+              endDate={event.endDate}
+              location={event.location}
+              description={event.description}
+              image={event.image}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

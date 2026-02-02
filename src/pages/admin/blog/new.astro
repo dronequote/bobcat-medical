@@ -1,0 +1,111 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="New Blog Post">
+  <div class="mb-6">
+    <a href="/admin/blog" class="text-bobcat-600 hover:text-bobcat-700 font-medium flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back
+    </a>
+  </div>
+
+  <form id="form" class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="admin-card space-y-4">
+        <div>
+          <label for="title" class="label">Title *</label>
+          <input type="text" id="title" name="title" class="input-field" required />
+        </div>
+        <div>
+          <label for="slug" class="label">URL Slug</label>
+          <input type="text" id="slug" name="slug" class="input-field" placeholder="auto-generated" />
+        </div>
+        <div>
+          <label for="excerpt" class="label">Excerpt</label>
+          <textarea id="excerpt" name="excerpt" rows="2" class="input-field" maxlength="300"></textarea>
+        </div>
+        <div>
+          <label for="content" class="label">Content (Markdown)</label>
+          <textarea id="content" name="content" rows="15" class="input-field font-mono text-sm"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="admin-card space-y-4">
+        <div>
+          <label for="coverImage" class="label">Cover Image URL</label>
+          <input type="text" id="coverImage" name="coverImage" class="input-field" />
+        </div>
+        <div>
+          <label for="author" class="label">Author</label>
+          <input type="text" id="author" name="author" class="input-field" value="Bobcat Medical Team" />
+        </div>
+        <div>
+          <label for="tags" class="label">Tags (comma separated)</label>
+          <input type="text" id="tags" name="tags" class="input-field" placeholder="Nursing, Tips" />
+        </div>
+        <label class="flex items-center gap-3">
+          <input type="checkbox" id="published" name="published" class="w-5 h-5 rounded border-warm-300 text-bobcat-600" />
+          <span>Published</span>
+        </label>
+      </div>
+
+      <div id="error" class="hidden bg-red-50 text-red-700 p-3 rounded-lg text-sm"></div>
+
+      <button type="submit" id="submit" class="btn-primary w-full">Create Post</button>
+    </div>
+  </form>
+</AdminLayout>
+
+<script>
+  import { createBlogPost } from '@lib/api';
+  import { isAdminLoggedIn } from '@lib/admin-auth';
+
+  if (!isAdminLoggedIn()) window.location.href = '/admin';
+
+  const form = document.getElementById('form') as HTMLFormElement;
+  const titleInput = document.getElementById('title') as HTMLInputElement;
+  const slugInput = document.getElementById('slug') as HTMLInputElement;
+  const errorEl = document.getElementById('error');
+  const submitBtn = document.getElementById('submit');
+
+  titleInput?.addEventListener('input', () => {
+    if (slugInput && !slugInput.dataset.manual) {
+      slugInput.value = titleInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+  });
+
+  slugInput?.addEventListener('input', () => { slugInput.dataset.manual = 'true'; });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl?.classList.add('hidden');
+    if (submitBtn) { submitBtn.textContent = 'Creating...'; submitBtn.setAttribute('disabled', 'true'); }
+
+    const formData = new FormData(form);
+    const tags = (formData.get('tags') as string || '').split(',').map(t => t.trim()).filter(Boolean);
+
+    try {
+      await createBlogPost({
+        title: formData.get('title') as string,
+        slug: formData.get('slug') as string || undefined,
+        excerpt: formData.get('excerpt') as string,
+        content: formData.get('content') as string,
+        coverImage: formData.get('coverImage') as string || undefined,
+        author: formData.get('author') as string || 'Bobcat Medical Team',
+        tags,
+        published: formData.get('published') === 'on',
+        publishedAt: formData.get('published') === 'on' ? new Date().toISOString() : undefined,
+      });
+      window.location.href = '/admin/blog';
+    } catch (error: any) {
+      if (errorEl) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); }
+    } finally {
+      if (submitBtn) { submitBtn.textContent = 'Create Post'; submitBtn.removeAttribute('disabled'); }
+    }
+  });
+</script>
