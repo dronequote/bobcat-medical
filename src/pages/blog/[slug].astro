@@ -10,7 +10,11 @@ let post: any = null;
 try {
   post = await getBlogPostBySlug(slug!);
 } catch (e) {
-  // Placeholder
+  // API error - will use placeholders below
+}
+
+// Use placeholders if API returns nothing
+if (!post) {
   const placeholders: Record<string, any> = {
     '10-things-every-night-shift-nurse-needs': {
       _id: '1',
@@ -492,6 +496,385 @@ Browse our collection of [nurse accessories](/shop?category=nurse-accessories) d
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-20',
       tags: ['Gear Guide', 'Nursing Life', 'Organization'],
+    },
+    'how-to-survive-first-year-nurse': {
+      _id: '6',
+      title: 'How to Survive Your First Year as a Nurse',
+      slug: 'how-to-survive-first-year-nurse',
+      excerpt: 'Practical advice from experienced nurses on navigating the challenges of your first year in healthcare.',
+      coverImage: '/images/hero/nurse-working.jpg',
+      content: `
+## Your First Year: A Survival Guide
+
+Congratulations! You passed NCLEX, landed your first nursing job, and now the real learning begins. The first year of nursing is notoriously challenging—but also incredibly rewarding. Here's what experienced nurses wish they'd known from day one.
+
+### The Reality Check
+
+Let's be honest: nursing school prepared you for the exams, not entirely for the job. You'll feel overwhelmed. You'll question whether you made the right choice. You'll cry in the supply closet (we've all been there).
+
+This is normal. It doesn't mean you're a bad nurse—it means you're human.
+
+### Practical Tips That Actually Help
+
+#### 1. Find Your People
+
+Identify the experienced nurses who want to help new grads succeed. Every unit has them—the ones who answer questions without judgment and share their shortcuts. These are your lifelines.
+
+Equally important: find other new nurses going through the same experience. Having someone to debrief with after a tough shift is invaluable.
+
+#### 2. Write Everything Down
+
+Get a small notebook that fits in your pocket. Write down:
+- Important phone extensions
+- Normal lab values
+- Medication doses you look up repeatedly
+- Tips from experienced nurses
+- Questions to research later
+
+Your brain can only hold so much. Don't trust it to remember everything.
+
+#### 3. Invest in Quality Gear Early
+
+Uncomfortable shoes will destroy your feet. A stethoscope around your neck will hurt by hour six. Disorganized pockets mean wasted time.
+
+Spend money on:
+- **Quality shoes** with proper support
+- **A stethoscope holder** that keeps your scope accessible without the neck pain
+- **A good watch** with a second hand for pulses and respirations
+- **Compression socks** for those 12-hour shifts
+
+The small investments make a big difference in your comfort and efficiency.
+
+#### 4. Ask Questions (Seriously)
+
+You will not know everything. That's okay—it's expected. What's NOT okay is pretending you know something when you don't.
+
+Good questions to ask:
+- "Can you show me how you do this?"
+- "What should I watch for with this patient?"
+- "Is there a better/faster way to do this?"
+- "I've never done this before—can you walk me through it?"
+
+No one expects you to be an expert. They expect you to be safe and willing to learn.
+
+#### 5. Master Time Management
+
+Time management is the hardest skill to develop, and it takes months to get comfortable. Some tips:
+
+- **Cluster your care** when possible
+- **Anticipate needs** before they become urgent
+- **Don't chart later**—chart as you go when possible
+- **Set alarms** for time-sensitive medications
+- **Build in buffer time** for the unexpected
+
+#### 6. Take Care of Yourself
+
+You cannot pour from an empty cup. First-year nurses often neglect their own health trying to prove themselves. Don't.
+
+- **Sleep** is not optional
+- **Eat actual meals**, not just vending machine snacks
+- **Stay hydrated**—keep water at your station
+- **Use your days off** to actually rest
+
+### The Emotional Side
+
+#### It Gets Easier
+
+The overwhelming feeling does fade. Around month 3-6, things start to click. By year one, you'll look back and be amazed at how much you've grown.
+
+#### You Will Make Mistakes
+
+Every nurse makes mistakes. The difference between a good nurse and a dangerous one isn't the absence of errors—it's how they handle them.
+
+- **Report errors** immediately and honestly
+- **Learn from mistakes** without spiraling into shame
+- **Implement systems** to prevent repeating errors
+
+#### Patient Deaths Are Hard
+
+You will lose patients. Some deaths will be expected; others will blindside you. There's no "right" way to grieve.
+
+- It's okay to cry
+- Talk to colleagues who understand
+- Seek professional support if needed
+- Remember: the fact that it affects you means you care
+
+### Resources for New Nurses
+
+- **Your facility's new grad program** (use every resource they offer)
+- **Preceptors and mentors** (stay in touch even after orientation ends)
+- **Online nursing communities** (for questions you're embarrassed to ask in person)
+- **Continuing education** (never stop learning)
+
+---
+
+## You've Got This
+
+The first year is hard. There's no sugarcoating it. But millions of nurses have survived it, and you will too. The key is to stay humble, keep learning, ask for help, and take care of yourself.
+
+One year from now, you'll be the one helping a new grad find their feet. And you'll remember exactly how it felt.
+
+*Need gear that makes your shifts easier? [Browse our collection](/shop) designed by nurses who've been exactly where you are.*
+      `,
+      author: 'Bobcat Medical Team',
+      publishedAt: '2025-12-15',
+      tags: ['New Nurses', 'Career Advice', 'Nursing Life'],
+    },
+    'scrub-pocket-essentials-checklist': {
+      _id: '7',
+      title: 'The Ultimate Scrub Pocket Essentials Checklist',
+      slug: 'scrub-pocket-essentials-checklist',
+      excerpt: 'Never forget a crucial tool again. Our comprehensive checklist covers everything you need in your pockets.',
+      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
+      content: `
+## The Complete Pocket Checklist
+
+There's an art to packing your scrub pockets. Too little, and you're constantly running back to the nurses' station. Too much, and you're a walking supply closet. Let's find the sweet spot.
+
+### The Non-Negotiables
+
+These items should be on your person at all times:
+
+#### Writing Tools
+- **3-4 pens** (they disappear—accept this)
+- **1 permanent marker** (for labeling tubes, bags, dressings)
+- **1 highlighter** (optional, but useful for some workflows)
+
+*Pro tip: Click pens are less likely to leak than cap pens, but cap pens are less likely to accidentally mark your scrubs.*
+
+#### Assessment Tools
+- **Penlight** (compact LED versions last forever)
+- **Stethoscope** (with a proper [holder](/shop?category=stethoscope-holders) so it's not around your neck)
+- **Bandage scissors** or trauma shears (on a retractable clip)
+
+#### Time & Communication
+- **Watch with second hand** (digital or analog, just needs seconds)
+- **Phone** (if allowed—many facilities now encourage them for communication apps)
+- **Badge with required ID**
+
+### The "Nice to Have" List
+
+These items are helpful but not critical for every shift:
+
+#### Medical Supplies
+- Alcohol swabs (a few in a baggie)
+- Small roll of tape
+- Hemostats
+- Personal hand sanitizer (the good stuff, not the hospital-issue)
+- Gloves (a pair in case you need them between supply rooms)
+
+#### Personal Care
+- Lip balm (hospital air is DRY)
+- Hand cream (for when you get a moment)
+- Breath mints or gum
+- Hair ties (if applicable)
+
+#### Snacks & Hydration
+- Small protein bar or snacks
+- Electrolyte packets
+- Note: Keep a water bottle at your station, not in your pocket
+
+### The Organizational System
+
+Having the right stuff means nothing if you can't find it. Create a system:
+
+#### Left Pocket
+- Phone
+- Personal items (lip balm, hand cream)
+- Snacks
+
+#### Right Pocket
+- Pens and marker
+- Penlight
+- Small notebook or "brain" sheet
+
+#### Fanny Pack / Accessory Pouch
+This is where having a [good nurse fanny pack](/shop/product/nurse-fanny-pack) pays off:
+- Scissors/shears
+- Tape
+- Alcohol swabs
+- Hemostats
+- Flushes
+- Anything bulky that doesn't fit in scrub pockets
+
+#### Stethoscope
+On a [magnetic holder](/shop/product/magnetic-stethoscope-holder) or [velcro holder](/shop/product/velcro-stethoscope-holder) at your waist or chest—NOT around your neck for 12 hours.
+
+### What NOT to Carry
+
+Some things seem useful but aren't worth the pocket real estate:
+
+- **Full medication guides** (use your phone app)
+- **Multiple colors of tape** (grab from supply as needed)
+- **Personal valuables** (keep in locker)
+- **Bulk supplies** (restock as needed, don't hoard)
+- **Anything you haven't used in the last 5 shifts**
+
+### Unit-Specific Additions
+
+Different specialties have different needs:
+
+#### ICU/Critical Care
+- Calculator (for drip rates)
+- Extra pen lights
+- Drug reference card
+
+#### Pediatrics
+- Fun stickers
+- Small distraction toys
+- Character bandages
+
+#### Emergency Department
+- Trauma shears (heavier duty)
+- Extra hemostats
+- Quick reference cards
+
+#### Labor & Delivery
+- Fetal heart tone reference
+- Timing device for contractions
+
+### The Pre-Shift Check
+
+Before every shift, do a 60-second inventory:
+
+1. ✅ All pockets restocked?
+2. ✅ Pens working?
+3. ✅ Phone charged?
+4. ✅ Stethoscope holder attached?
+5. ✅ Badge visible?
+
+This quick check prevents the mid-shift scramble when you need something and can't find it.
+
+---
+
+## Build Your Perfect Setup
+
+Download our printable checklist to customize for your unit and workflow. And if you're tired of juggling everything in tiny scrub pockets, check out our [nurse accessories](/shop?category=nurse-accessories) designed to keep you organized.
+
+*What's in YOUR pockets? Tag us on [Instagram](https://www.instagram.com/bobcatmedical) with your setup!*
+      `,
+      author: 'Bobcat Medical Team',
+      publishedAt: '2025-12-10',
+      tags: ['Gear Guide', 'Nursing Life', 'Organization'],
+    },
+    'gift-ideas-for-nurses': {
+      _id: '8',
+      title: 'Gift Ideas for Nurses: What They Actually Want',
+      slug: 'gift-ideas-for-nurses',
+      excerpt: 'Skip the cheesy "Nurses are angels" mugs. Here are gifts nurses will actually use and appreciate.',
+      coverImage: '/images/products/magnetic-holder-1.jpg',
+      content: `
+## Gifts Nurses Will Actually Use
+
+We love the thought behind "World's Best Nurse" mugs and angel-themed decor. Really, we do. But if you want to give a gift that a nurse will actually use and appreciate, read on.
+
+These recommendations come from real nurses who've received (and given) it all.
+
+### Tier 1: The Everyday Essentials
+
+These are gifts that improve a nurse's daily work life:
+
+#### Stethoscope Holder ($15-25)
+A proper stethoscope holder is a game-changer. Most nurses don't buy one for themselves, making it a perfect gift.
+
+- **[Magnetic holders](/shop/product/magnetic-stethoscope-holder)** are our top pick—strong, quick, and durable
+- **[Velcro holders](/shop/product/velcro-stethoscope-holder)** are great for those who prefer a traditional feel
+
+*Why they'll love it: No more neck pain from 12 hours of stethoscope-around-the-neck. Instant access when they need it.*
+
+#### Quality Compression Socks ($20-40)
+Not the boring beige medical ones—actual cute, colorful compression socks designed for long shifts. Brands like Comrad and Sockwell make great options.
+
+*Why they'll love it: Their legs will thank you after every shift.*
+
+#### Nurse Fanny Pack ($20-30)
+A well-designed [fanny pack](/shop/product/nurse-fanny-pack) holds all those essentials that don't fit in scrub pockets. Look for multiple compartments and easy-clean material.
+
+*Why they'll love it: Organization without the bulk.*
+
+### Tier 2: Self-Care & Recovery
+
+Nurses give care all day—help them recover:
+
+#### Massage Gift Card ($50-100+)
+A professional massage after a string of rough shifts is pure bliss. Book it for them if possible, since nurses often won't book it themselves.
+
+#### High-Quality Lotion or Hand Cream ($15-30)
+Constant hand washing and sanitizer destroys skin. Look for intensive repair creams like O'Keeffe's Working Hands, Eucerin, or Aquaphor.
+
+*Pro tip: Get a small tube for their pocket AND a larger tub for home.*
+
+#### Cozy Robe or Blanket ($30-60)
+After a long shift, nothing beats wrapping up in something soft. Barefoot Dreams makes amazing (if pricey) options. Target and Amazon have great budget alternatives.
+
+### Tier 3: Food & Drinks
+
+The way to a nurse's heart is through their stomach:
+
+#### Quality Coffee or Tea ($15-40)
+Nurses run on caffeine. A nice coffee subscription, fancy loose-leaf tea set, or bag of premium beans is always appreciated.
+
+#### Meal Delivery Gift Card ($50-100+)
+DoorDash, Uber Eats, or Grubhub gift cards for those nights when cooking is absolutely not happening.
+
+#### Snack Box Subscription ($20-50/month)
+Services like SnackCrate or Bokksu deliver interesting snacks monthly. Perfect for night shift survival.
+
+### Tier 4: Experiences
+
+Sometimes the best gift is time away from healthcare:
+
+#### Spa Day
+Massage, facial, the works. Book it on their day off.
+
+#### Nice Dinner Out
+Somewhere they'd never take themselves. Make the reservation.
+
+#### Weekend Getaway
+If budget allows, a night or two at a nice hotel can be the ultimate reset.
+
+### Gifts to Avoid
+
+With love, please skip these:
+
+❌ **"Nurses are angels" merchandise** - Sweet sentiment, but they have enough
+❌ **Cheap stethoscopes** - They already have one they trust
+❌ **Medical-themed jewelry** (unless you KNOW they want it)
+❌ **Scrubs** - They're picky about fit and fabric
+❌ **Anything that says "I'm a nurse, what's your superpower?"**
+❌ **Live plants** - They work 12-hour shifts; the plant will die
+
+### Budget-Friendly Ideas Under $20
+
+Great gifts don't have to be expensive:
+
+- Nice pens that actually work
+- Good quality chapstick/lip balm set
+- Fancy hand cream
+- Coffee shop gift card
+- Homemade baked goods (always a hit)
+- A heartfelt card expressing what they mean to you
+
+### The Best Gift of All
+
+Honestly? Sometimes the best gift is just understanding.
+
+- Don't be offended when they're too tired to hang out
+- Bring them food during a rough stretch of shifts
+- Listen when they need to vent
+- Tell them you're proud of them
+
+---
+
+## Shopping for a Nurse?
+
+Browse our collection of [practical nursing accessories](/shop) that make thoughtful gifts. Everything we sell is designed with real nurses' needs in mind.
+
+*Have a nurse in your life? Share this list with whoever asks "What do you want for your birthday?"*
+      `,
+      author: 'Bobcat Medical Team',
+      publishedAt: '2025-12-05',
+      tags: ['Gift Guide', 'Nursing Life'],
     },
   };
   post = placeholders[slug!];
