@@ -171,8 +171,8 @@
       <a href="/" class="back-link">&larr; Back to website</a>
     </div>
 
-    <script type="module">
-      import { isAdminLoggedIn, requestAdminLogin } from '/src/lib/admin-auth.ts';
+    <script>
+      import { isAdminLoggedIn, requestAdminLogin } from '@lib/admin-auth';
 
       // Check if already logged in
       if (isAdminLoggedIn()) {
