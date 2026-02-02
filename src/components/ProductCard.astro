@@ -24,7 +24,7 @@ const hasVariants = variants && variants.length > 0;
 const displayPrice = hasVariants ? variants[0].price : price;
 ---
 
-<div class="card overflow-hidden group" data-product-card={id}>
+<div class="card overflow-hidden group h-full flex flex-col" data-product-card={id}>
   <a href={`/shop/product/${slug}`} class="block">
     <div class="aspect-square bg-warm-100 overflow-hidden relative">
       {image ? (
@@ -48,53 +48,57 @@ const displayPrice = hasVariants ? variants[0].price : price;
       )}
     </div>
   </a>
-  <div class="p-6">
-    {category && (
-      <span class="text-xs text-bobcat-600 font-medium uppercase tracking-wider">
-        {category}
-      </span>
-    )}
-    <h3 class="font-display text-xl font-bold text-warm-900 mt-1 mb-2">
-      <a href={`/shop/product/${slug}`} class="hover:text-bobcat-600 transition-colors">
-        {name}
-      </a>
-    </h3>
-    {shortDescription && (
-      <p class="text-warm-600 text-sm mb-4 line-clamp-2">{shortDescription}</p>
-    )}
-
-    <!-- Price Display -->
-    <div class="flex items-center gap-2 mb-3">
-      <span class="product-price font-display text-2xl font-bold text-bobcat-600" data-base-price={displayPrice}>
-        ${displayPrice.toFixed(2)}
-      </span>
-      {hasDiscount && (
-        <span class="text-warm-400 line-through text-sm">${compareAtPrice.toFixed(2)}</span>
+  <div class="p-6 flex flex-col flex-1">
+    <!-- Product Info (top section) -->
+    <div class="flex-1">
+      {category && (
+        <span class="text-xs text-bobcat-600 font-medium uppercase tracking-wider">
+          {category}
+        </span>
       )}
+      <h3 class="font-display text-lg font-bold text-warm-900 mt-1 mb-2 line-clamp-2 min-h-[3.5rem]">
+        <a href={`/shop/product/${slug}`} class="hover:text-bobcat-600 transition-colors">
+          {name}
+        </a>
+      </h3>
     </div>
 
-    <!-- Variant Selector (shown when has variants) -->
-    {hasVariants && (
-      <div class="variant-selector mb-3">
-        <div class="flex flex-wrap gap-1">
-          {variants.map((variant, index) => (
-            <button
-              type="button"
-              class={`variant-option text-xs px-2 py-1 rounded border transition-all ${index === 0 ? 'border-bobcat-500 bg-bobcat-50 text-bobcat-700' : 'border-warm-200 hover:border-bobcat-300 text-warm-600'}`}
-              data-variant-index={index}
-              data-variant-name={variant.name}
-              data-variant-price={variant.price}
-              data-variant-ghl-price-id={variant.ghlPriceId || ''}
-            >
-              {variant.name}
-            </button>
-          ))}
-        </div>
+    <!-- Price, Variants, Cart (bottom section - always aligned) -->
+    <div class="mt-auto">
+      <!-- Price Display -->
+      <div class="flex items-center gap-2 mb-3">
+        <span class="product-price font-display text-2xl font-bold text-bobcat-600" data-base-price={displayPrice}>
+          ${displayPrice.toFixed(2)}
+        </span>
+        {hasDiscount && (
+          <span class="text-warm-400 line-through text-sm">${compareAtPrice.toFixed(2)}</span>
+        )}
       </div>
-    )}
 
-    <!-- Add to Cart Button (initial state) -->
-    <div class="cart-controls">
+      <!-- Variant Selector (always reserve space) -->
+      <div class="variant-selector mb-3 min-h-[2rem]">
+        {hasVariants ? (
+          <div class="flex flex-wrap gap-1">
+            {variants.map((variant, index) => (
+              <button
+                type="button"
+                class={`variant-option text-xs px-2 py-1 rounded border transition-all ${index === 0 ? 'border-bobcat-500 bg-bobcat-50 text-bobcat-700' : 'border-warm-200 hover:border-bobcat-300 text-warm-600'}`}
+                data-variant-index={index}
+                data-variant-name={variant.name}
+                data-variant-price={variant.price}
+                data-variant-ghl-price-id={variant.ghlPriceId || ''}
+              >
+                {variant.name}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div class="h-[2rem]"></div>
+        )}
+      </div>
+
+      <!-- Add to Cart Button (initial state) -->
+      <div class="cart-controls">
       <button
         class="add-to-cart-btn btn-primary btn-sm w-full"
         data-product-id={id}
@@ -126,6 +130,7 @@ const displayPrice = hasVariants ? variants[0].price : price;
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script>
