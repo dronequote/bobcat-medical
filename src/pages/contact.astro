@@ -143,18 +143,50 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   const form = document.getElementById('contact-form') as HTMLFormElement;
   const successMsg = document.getElementById('form-success');
   const errorMsg = document.getElementById('form-error');
+  const submitBtn = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!form) return;
 
-    // For now, just show success message
-    // In production, this would send to a backend or email service
-    successMsg?.classList.remove('hidden');
+    successMsg?.classList.add('hidden');
     errorMsg?.classList.add('hidden');
-    form.reset();
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+    }
 
-    setTimeout(() => {
-      successMsg?.classList.add('hidden');
-    }, 5000);
+    const payload = {
+      name: (form.querySelector('#name') as HTMLInputElement)?.value?.trim() ?? '',
+      email: (form.querySelector('#email') as HTMLInputElement)?.value?.trim() ?? '',
+      subject: (form.querySelector('#subject') as HTMLSelectElement)?.value ?? 'general',
+      message: (form.querySelector('#message') as HTMLTextAreaElement)?.value?.trim() ?? '',
+    };
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        successMsg?.classList.remove('hidden');
+        form.reset();
+        setTimeout(() => successMsg?.classList.add('hidden'), 5000);
+      } else {
+        errorMsg?.classList.remove('hidden');
+        if (data?.error) (errorMsg as HTMLElement).textContent = data.error;
+      }
+    } catch {
+      errorMsg?.classList.remove('hidden');
+      (errorMsg as HTMLElement).textContent = 'Something went wrong. Please try again or email us directly.';
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+      }
+    }
   });
 </script>
