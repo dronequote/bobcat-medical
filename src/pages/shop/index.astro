@@ -1,15 +1,13 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import ProductCard from '@components/ProductCard.astro';
-import { getProducts, getCategories } from '@lib/api';
+import { getProducts } from '@lib/api';
 
-// Fetch data from API
+// Fetch data from API — single shop page, no category filter for now
 let products: any[] = [];
-let categories: any[] = [];
 
 try {
   products = await getProducts();
-  categories = await getCategories();
 } catch (e) {
   // Placeholder data
   products = [
@@ -19,7 +17,6 @@ try {
       slug: 'magnetic-stethoscope-holder',
       price: 18.99,
       shortDescription: 'Strong magnet keeps your stethoscope secure and accessible.',
-      categoryId: 'stethoscope-holders',
     },
     {
       _id: 'velcro-stethoscope-holder',
@@ -27,7 +24,6 @@ try {
       slug: 'velcro-stethoscope-holder',
       price: 18.99,
       shortDescription: 'Secure velcro attachment for easy one-hand access.',
-      categoryId: 'stethoscope-holders',
     },
     {
       _id: 'nurse-fanny-pack',
@@ -36,23 +32,9 @@ try {
       price: 22.99,
       compareAtPrice: 23.99,
       shortDescription: 'Keep all your essentials organized and within reach.',
-      categoryId: 'nurse-accessories',
     },
   ];
-  categories = [
-    { _id: 'stethoscope-holders', name: 'Stethoscope Holders', slug: 'stethoscope-holders' },
-    { _id: 'nurse-accessories', name: 'Nurse Accessories', slug: 'nurse-accessories' },
-  ];
 }
-
-// Get category filter from URL
-const url = new URL(Astro.request.url);
-const categoryFilter = url.searchParams.get('category');
-
-// Filter products by category
-const filteredProducts = categoryFilter
-  ? products.filter(p => p.category?.slug === categoryFilter || p.categoryId === categoryFilter)
-  : products;
 ---
 
 <BaseLayout
@@ -72,36 +54,10 @@ const filteredProducts = categoryFilter
   <!-- Products Grid -->
   <section class="section-padding bg-warm-50">
     <div class="container-width">
-      <!-- Category Filter -->
-      <div class="flex flex-wrap gap-2 mb-8 justify-center">
-        <a
-          href="/shop"
-          class={`px-4 py-2 rounded-full font-medium transition-colors ${
-            !categoryFilter
-              ? 'bg-bobcat-600 text-white'
-              : 'bg-white text-warm-700 hover:bg-bobcat-100'
-          }`}
-        >
-          All
-        </a>
-        {categories.map((category) => (
-          <a
-            href={`/shop?category=${category.slug}`}
-            class={`px-4 py-2 rounded-full font-medium transition-colors ${
-              categoryFilter === category.slug
-                ? 'bg-bobcat-600 text-white'
-                : 'bg-white text-warm-700 hover:bg-bobcat-100'
-            }`}
-          >
-            {category.name}
-          </a>
-        ))}
-      </div>
-
       <!-- Products -->
-      {filteredProducts.length > 0 ? (
+      {products.length > 0 ? (
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <ProductCard
               id={product._id}
               name={product.name}
@@ -122,7 +78,7 @@ const filteredProducts = categoryFilter
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
           <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No products found</h2>
-          <p class="text-warm-500 mb-4">Try selecting a different category or check back later.</p>
+          <p class="text-warm-500 mb-4">Check back later for new products.</p>
           <a href="/shop" class="btn-primary">View All Products</a>
         </div>
       )}
