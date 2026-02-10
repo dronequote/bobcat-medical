@@ -2,6 +2,7 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import BlogCard from '@components/BlogCard.astro';
 import { getBlogPosts } from '@lib/api';
+import { BLOG_HERO_IMAGE_ASSETS } from '@lib/blogHeroImageAssets';
 
 let posts: any[] = [];
 
@@ -29,7 +30,7 @@ if (!posts || posts.length === 0) {
       title: 'The Best Ways to Keep Your Stethoscope Accessible',
       slug: 'best-ways-to-keep-stethoscope-accessible',
       excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
-      coverImage: '/images/products/magnetic-holder-1.jpg',
+      coverImage: '/images/hero/healthcare-professional-conducting-a-checkup-with-2026-01-09-10-14-59-utc.webp',
       author: 'Bobcat Medical Team',
       publishedAt: '2026-01-10',
       tags: ['Gear Guide', 'Product Review'],
@@ -39,7 +40,7 @@ if (!posts || posts.length === 0) {
       title: 'Why Magnetic Stethoscope Holders Are Better',
       slug: 'why-magnetic-stethoscope-holders-are-better',
       excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
-      coverImage: '/images/products/stethoscope-holder-1.jpg',
+      coverImage: '/images/hero/doctor-team-and-hospital-at-work-smile-together-f-2026-01-09-11-47-30-utc.webp',
       author: 'Bobcat Medical Team',
       publishedAt: '2026-01-05',
       tags: ['Product Spotlight', 'Gear Guide'],
@@ -49,7 +50,7 @@ if (!posts || posts.length === 0) {
       title: 'Self-Care Tips for Healthcare Workers',
       slug: 'self-care-tips-for-healthcare-workers',
       excerpt: 'Practical strategies for maintaining your physical and mental health while caring for others.',
-      coverImage: '/images/about/nurse-smiling.jpg',
+      coverImage: '/images/hero/portrait-of-smiling-doctor-with-colleagues-behind-2026-01-06-00-29-35-utc.webp',
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-28',
       tags: ['Wellness', 'Nursing Life', 'Mental Health'],
@@ -59,7 +60,7 @@ if (!posts || posts.length === 0) {
       title: 'Organizing Your Nursing Essentials: A Complete Guide',
       slug: 'organizing-your-nursing-essentials',
       excerpt: 'How to keep all your nursing supplies organized and accessible during busy shifts.',
-      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
+      coverImage: '/images/hero/patient-and-nurse-in-medical-consultation-2026-01-08-06-29-07-utc.webp',
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-20',
       tags: ['Gear Guide', 'Nursing Life', 'Organization'],
@@ -69,7 +70,7 @@ if (!posts || posts.length === 0) {
       title: 'How to Survive Your First Year as a Nurse',
       slug: 'how-to-survive-first-year-nurse',
       excerpt: 'Practical advice from experienced nurses on navigating the challenges of your first year in healthcare.',
-      coverImage: '/images/hero/nurse-working.jpg',
+      coverImage: '/images/hero/hero-nurse.jpg',
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-15',
       tags: ['New Nurses', 'Career Advice', 'Nursing Life'],
@@ -79,7 +80,7 @@ if (!posts || posts.length === 0) {
       title: 'The Ultimate Scrub Pocket Essentials Checklist',
       slug: 'scrub-pocket-essentials-checklist',
       excerpt: 'Never forget a crucial tool again. Our comprehensive checklist covers everything you need in your pockets.',
-      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
+      coverImage: '/images/hero/smiling-multiethnic-group-of-doctors-scientists-i-2026-01-07-01-22-28-utc.webp',
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-10',
       tags: ['Gear Guide', 'Nursing Life', 'Organization'],
@@ -89,7 +90,7 @@ if (!posts || posts.length === 0) {
       title: 'Gift Ideas for Nurses: What They Actually Want',
       slug: 'gift-ideas-for-nurses',
       excerpt: 'Skip the cheesy "Nurses are angels" mugs. Here are gifts nurses will actually use and appreciate.',
-      coverImage: '/images/products/magnetic-holder-1.jpg',
+      coverImage: '/images/hero/hero-medical.jpg',
       author: 'Bobcat Medical Team',
       publishedAt: '2025-12-05',
       tags: ['Gift Guide', 'Nursing Life'],
@@ -99,6 +100,11 @@ if (!posts || posts.length === 0) {
 
 // Only show published posts
 const publishedPosts = posts.filter(p => p.published !== false);
+// Always use our hero image assets by index (optimized via Astro Image)
+const postsWithHeroImages = publishedPosts.map((p, i) => ({
+  ...p,
+  coverImage: BLOG_HERO_IMAGE_ASSETS[i % BLOG_HERO_IMAGE_ASSETS.length],
+}));
 ---
 
 <BaseLayout
@@ -118,9 +124,9 @@ const publishedPosts = posts.filter(p => p.published !== false);
   <!-- Blog Posts -->
   <section class="section-padding bg-warm-50">
     <div class="container-width">
-      {publishedPosts.length > 0 ? (
+      {postsWithHeroImages.length > 0 ? (
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {publishedPosts.map((post) => (
+          {postsWithHeroImages.map((post) => (
             <BlogCard
               title={post.title}
               slug={post.slug}

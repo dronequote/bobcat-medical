@@ -1,19 +1,17 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import { getBlogPostBySlug, getBlogPosts } from '@lib/api';
+import { Image } from 'astro:assets';
+import { getBlogPosts } from '@lib/api';
+import { BLOG_HERO_IMAGE_ASSETS } from '@lib/blogHeroImageAssets';
+import { BLOG_PLACEHOLDER_SLUGS_ORDER } from '@lib/blogHeroImages';
 import { marked } from 'marked';
 
 const { slug } = Astro.params;
 
-let post: any = null;
+const allPosts = await getBlogPosts().catch(() => []);
+let post: any = allPosts.length > 0 ? allPosts.find((p: any) => p.slug === slug) ?? null : null;
 
-try {
-  post = await getBlogPostBySlug(slug!);
-} catch (e) {
-  // API error - will use placeholders below
-}
-
-// Use placeholders if API returns nothing
+// Use placeholders if API returns nothing or no matching post
 if (!post) {
   const placeholders: Record<string, any> = {
     '10-things-every-night-shift-nurse-needs': {
@@ -84,7 +82,7 @@ Check out our [shop](/shop) for nurse-approved accessories that make every shift
       title: 'The Best Ways to Keep Your Stethoscope Accessible',
       slug: 'best-ways-to-keep-stethoscope-accessible',
       excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
-      coverImage: '/images/products/magnetic-holder-1.jpg',
+      coverImage: '/images/hero/healthcare-professional-conducting-a-checkup-with-2026-01-09-10-14-59-utc.webp',
       content: `
 ## The Stethoscope Struggle Is Real
 
@@ -207,7 +205,7 @@ Browse our collection of [stethoscope holders](/shop?category=stethoscope-holder
       title: 'Why Magnetic Stethoscope Holders Are Better',
       slug: 'why-magnetic-stethoscope-holders-are-better',
       excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
-      coverImage: '/images/products/stethoscope-holder-1.jpg',
+      coverImage: '/images/hero/doctor-team-and-hospital-at-work-smile-together-f-2026-01-09-11-47-30-utc.webp',
       content: `
 ## The Magnetic Advantage
 
@@ -299,7 +297,7 @@ Strong. Secure. Simple. That's the magnetic advantage.
       title: 'Self-Care Tips for Healthcare Workers',
       slug: 'self-care-tips-for-healthcare-workers',
       excerpt: 'Practical strategies for maintaining your physical and mental health while caring for others.',
-      coverImage: '/images/about/nurse-smiling.jpg',
+      coverImage: '/images/hero/portrait-of-smiling-doctor-with-colleagues-behind-2026-01-06-00-29-35-utc.webp',
       content: `
 ## You Can't Pour From an Empty Cup
 
@@ -395,7 +393,7 @@ Remember: Taking care of yourself isn't selfish. It's necessary. Your patients n
       title: 'Organizing Your Nursing Essentials: A Complete Guide',
       slug: 'organizing-your-nursing-essentials',
       excerpt: 'How to keep all your nursing supplies organized and accessible during busy shifts.',
-      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
+      coverImage: '/images/hero/patient-and-nurse-in-medical-consultation-2026-01-08-06-29-07-utc.webp',
       content: `
 ## The Chaos of Nursing Supplies
 
@@ -502,7 +500,7 @@ Browse our collection of [nurse accessories](/shop?category=nurse-accessories) d
       title: 'How to Survive Your First Year as a Nurse',
       slug: 'how-to-survive-first-year-nurse',
       excerpt: 'Practical advice from experienced nurses on navigating the challenges of your first year in healthcare.',
-      coverImage: '/images/hero/nurse-working.jpg',
+      coverImage: '/images/hero/hero-nurse.jpg',
       content: `
 ## Your First Year: A Survival Guide
 
@@ -625,7 +623,7 @@ One year from now, you'll be the one helping a new grad find their feet. And you
       title: 'The Ultimate Scrub Pocket Essentials Checklist',
       slug: 'scrub-pocket-essentials-checklist',
       excerpt: 'Never forget a crucial tool again. Our comprehensive checklist covers everything you need in your pockets.',
-      coverImage: '/images/products/nurse-fanny-pack-1.jpg',
+      coverImage: '/images/hero/smiling-multiethnic-group-of-doctors-scientists-i-2026-01-07-01-22-28-utc.webp',
       content: `
 ## The Complete Pocket Checklist
 
@@ -762,7 +760,7 @@ Download our printable checklist to customize for your unit and workflow. And if
       title: 'Gift Ideas for Nurses: What They Actually Want',
       slug: 'gift-ideas-for-nurses',
       excerpt: 'Skip the cheesy "Nurses are angels" mugs. Here are gifts nurses will actually use and appreciate.',
-      coverImage: '/images/products/magnetic-holder-1.jpg',
+      coverImage: '/images/hero/hero-medical.jpg',
       content: `
 ## Gifts Nurses Will Actually Use
 
@@ -884,6 +882,13 @@ if (!post) {
   return Astro.redirect('/blog');
 }
 
+// Use hero image asset by index (optimized) so it matches the blog listing
+const postIndex = allPosts.length > 0
+  ? allPosts.findIndex((p: any) => p.slug === slug)
+  : BLOG_PLACEHOLDER_SLUGS_ORDER.indexOf(slug! as any);
+const coverAsset = BLOG_HERO_IMAGE_ASSETS[(postIndex >= 0 ? postIndex : 0) % BLOG_HERO_IMAGE_ASSETS.length];
+post = { ...post, coverImage: coverAsset };
+
 const formattedDate = post.publishedAt
   ? new Date(post.publishedAt).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -932,13 +937,16 @@ const htmlContent = post.content ? await marked(post.content) : '';
       </div>
     </header>
 
-    <!-- Cover Image -->
+    <!-- Cover Image (optimized for quality) -->
     {post.coverImage && (
-      <div class="container-width max-w-4xl -mt-8">
-        <img
+      <div class="container-width max-w-4xl mt-8">
+        <Image
           src={post.coverImage}
           alt={post.title}
-          class="w-full h-64 md:h-80 lg:h-96 object-cover rounded-2xl shadow-xl"
+          width={896}
+          height={504}
+          quality={90}
+          class="w-full h-64 md:h-80 lg:h-96 object-cover object-top rounded-2xl shadow-xl"
         />
       </div>
     )}

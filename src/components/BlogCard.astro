@@ -1,15 +1,19 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
   title: string;
   slug: string;
   excerpt: string;
-  coverImage?: string;
+  coverImage?: string | import('astro').ImageMetadata;
   author: string;
   publishedAt?: string;
   tags?: string[];
 }
 
 const { title, slug, excerpt, coverImage, author, publishedAt, tags } = Astro.props;
+
+const isAsset = coverImage && typeof coverImage === 'object' && 'src' in coverImage;
 
 const formattedDate = publishedAt
   ? new Date(publishedAt).toLocaleDateString('en-US', {
@@ -24,12 +28,25 @@ const formattedDate = publishedAt
   <a href={`/blog/${slug}`} class="block">
     <div class="aspect-video bg-warm-100 overflow-hidden">
       {coverImage ? (
-        <img
-          src={coverImage}
-          alt={title}
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
+        isAsset ? (
+          <Image
+            src={coverImage as import('astro').ImageMetadata}
+            alt={title}
+            width={600}
+            height={338}
+            quality={90}
+            class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        ) : (
+          <img
+            src={coverImage as string}
+            alt={title}
+            class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            decoding="async"
+          />
+        )
       ) : (
         <div class="w-full h-full flex items-center justify-center text-warm-400">
           <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
