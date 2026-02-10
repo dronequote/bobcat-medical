@@ -50,12 +50,15 @@ if (featuredProducts.length === 0 && products.length > 0) {
 ---
 
 <BaseLayout title="Home">
-  <!-- Hero Section -->
+  <!-- Hero Section: gradient overlay (teal → green-beige → peach) so background image shows through, especially in peach area -->
   <section class="relative bg-bobcat-800 text-white overflow-hidden min-h-[600px]">
     <div class="absolute inset-0">
-      <img src="/images/hero/nurse-working.jpg" alt="" class="w-full h-full object-cover opacity-20" />
+      <img src="/images/hero/nurse-working.jpg" alt="" class="w-full h-full object-cover opacity-35" />
     </div>
-    <div class="absolute inset-0 bg-gradient-to-br from-bobcat-900/90 via-bobcat-800/85 to-bobcat-700/80"></div>
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(to bottom, rgba(6, 67, 67, 0.82) 0%, rgba(115, 120, 105, 0.55) 50%, rgba(253, 224, 217, 0.42) 100%);"
+    ></div>
 
     <div class="relative container-width py-24 md:py-32 lg:py-40">
       <div class="max-w-3xl">

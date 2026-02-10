@@ -3,30 +3,72 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import EventCard from '@components/EventCard.astro';
 import { getEvents } from '@lib/api';
 
+// April 2026 outreach events (standard template; merge with API events when available)
+const APRIL_2026_EVENTS = [
+  {
+    _id: 'april-universities',
+    title: 'University Outreach',
+    slug: 'university-outreach-april-2026',
+    date: '2026-04-01',
+    endDate: '2026-04-30',
+    location: 'Nursing & medical schools (various campuses)',
+    description: 'We’re visiting nursing and medical programs to connect with students and share how Bobcat Medical gear supports real clinical workflows. Stop by our table to try our stethoscope holders and packs—and get exclusive student pricing.',
+    type: 'universities',
+    featured: true,
+  },
+  {
+    _id: 'april-lectures',
+    title: 'Lecture & Campus Visits',
+    slug: 'lecture-visits-april-2026',
+    date: '2026-04-01',
+    endDate: '2026-04-30',
+    location: 'Partner schools and programs',
+    description: 'Join us for short talks and demos at partner schools. We cover product design, quality, and how to choose the right gear for your role. Q&A and hands-on time with our products at every visit.',
+    type: 'lectures',
+    featured: true,
+  },
+  {
+    _id: 'april-vocational',
+    title: 'Vocational & Nursing Assistant Programs',
+    slug: 'vocational-schools-april-2026',
+    date: '2026-04-01',
+    endDate: '2026-04-30',
+    location: 'Vocational schools and CNA programs',
+    description: 'We’re connecting with nursing assistants and vocational students at programs across the region. Learn about durable, practical gear built for busy shifts and get hands-on with our holders and packs.',
+    type: 'vocational',
+    featured: false,
+  },
+  {
+    _id: 'april-trade',
+    title: 'Trade Shows & Conferences',
+    slug: 'trade-shows-april-2026',
+    date: '2026-04-01',
+    endDate: '2026-04-30',
+    location: 'Healthcare conferences and trade shows',
+    description: 'Find Bobcat Medical at select healthcare and nursing conferences this April. Visit our booth to meet the team, see our full product line, and take advantage of event-only offers.',
+    type: 'trade-shows',
+    featured: true,
+  },
+];
+
 let events: any[] = [];
 
 try {
-  events = await getEvents();
+  const apiEvents = await getEvents();
+  // If API returns events, merge with April 2026 (avoid duplicates by slug)
+  const apiSlugs = new Set((apiEvents || []).map((e: any) => e.slug));
+  const extraApril = APRIL_2026_EVENTS.filter((e: any) => !apiSlugs.has(e.slug));
+  events = Array.isArray(apiEvents) && apiEvents.length > 0 ? [...apiEvents, ...extraApril] : APRIL_2026_EVENTS;
 } catch (e) {
-  // Placeholder events
-  events = [
-    {
-      _id: '1',
-      title: 'Nursing Expo April 2026',
-      slug: 'nursing-expo-april-2026',
-      date: '2026-04-15',
-      endDate: '2026-04-17',
-      location: 'Convention Center, CA',
-      description: 'Come visit us at booth #123! We\'ll be showcasing our latest products and offering exclusive discounts.',
-      featured: true,
-    },
-  ];
+  events = APRIL_2026_EVENTS;
 }
 
-// Sort events by date (upcoming first)
-const sortedEvents = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+// Sort events by date (upcoming first), then by title
+const sortedEvents = [...events].sort((a, b) => {
+  const d = new Date(a.date).getTime() - new Date(b.date).getTime();
+  return d !== 0 ? d : (a.title || '').localeCompare(b.title || '');
+});
 
-// Separate upcoming and past events
 const now = new Date();
 const upcomingEvents = sortedEvents.filter(e => new Date(e.date) >= now);
 const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
@@ -34,14 +76,14 @@ const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
 
 <BaseLayout
   title="Events"
-  description="Find Bobcat Medical at nursing events, conferences, and expos. Meet our team and see our products in person."
+  description="Find Bobcat Medical at universities, lecture visits, vocational programs, and trade shows. Meet our team and see our products in person."
 >
   <!-- Hero -->
   <section class="bg-bobcat-800 text-white py-16">
     <div class="container-width text-center">
       <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">Events</h1>
       <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
-        Come meet us in person! Find Bobcat Medical at nursing events and conferences.
+        Meet us at campuses, conferences, and trade shows. We’re connecting with nursing and medical students and professionals in person.
       </p>
     </div>
   </section>
@@ -49,10 +91,21 @@ const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
   <!-- Upcoming Events -->
   <section class="section-padding bg-warm-50">
     <div class="container-width">
-      <h2 class="font-display text-2xl font-bold text-warm-900 mb-8">Upcoming Events</h2>
+      <div class="mb-10">
+        <span class="text-bobcat-600 font-semibold text-sm uppercase tracking-wider">Where we’ll be</span>
+        <h2 class="font-display text-2xl md:text-3xl font-bold text-warm-900 mt-2">
+          Upcoming Events
+        </h2>
+        <p class="text-warm-600 mt-2 max-w-2xl">
+          Join us for demos, talks, and hands-on product time at universities, vocational programs, and healthcare conferences.
+        </p>
+      </div>
 
       {upcomingEvents.length > 0 ? (
         <div class="space-y-6">
+          <h3 class="font-display text-xl font-bold text-warm-800 border-b border-bobcat-200 pb-2">
+            April 2026
+          </h3>
           {upcomingEvents.map((event) => (
             <EventCard
               title={event.title}
@@ -67,7 +120,7 @@ const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
           ))}
         </div>
       ) : (
-        <div class="text-center py-12 bg-white rounded-2xl">
+        <div class="text-center py-12 bg-white rounded-2xl shadow-sm">
           <svg class="w-16 h-16 text-warm-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -98,4 +151,20 @@ const pastEvents = sortedEvents.filter(e => new Date(e.date) < now);
       </div>
     </section>
   )}
+
+  <!-- CTA -->
+  <section class="section-padding bg-bobcat-600 text-white text-center">
+    <div class="container-width max-w-2xl">
+      <h2 class="font-display text-2xl md:text-3xl font-bold mb-4">Want us at your school or event?</h2>
+      <p class="text-bobcat-100 mb-6">
+        We’re always open to connecting with more nursing and medical programs. Reach out to discuss a visit or booth opportunity.
+      </p>
+      <a href="/contact" class="btn-coral inline-flex items-center gap-2">
+        Contact Us
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
 </BaseLayout>
