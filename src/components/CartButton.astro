@@ -89,9 +89,9 @@
 <!-- Checkout Modal -->
 <div
   id="checkout-modal"
-  class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/50"
+  class="fixed inset-0 z-[60] hidden items-center justify-center p-3 sm:p-4 md:p-6 bg-black/50"
 >
-  <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+  <div class="bg-white rounded-2xl w-full max-w-[min(100%,28rem)] sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
     <!-- Email Form Step -->
     <div id="checkout-step-email">
       <div class="p-6 border-b border-warm-200">
@@ -157,21 +157,23 @@
     </div>
 
     <!-- Payment Iframe Step -->
-    <div id="checkout-step-payment" class="hidden">
-      <div class="p-4 border-b border-warm-200 bg-bobcat-600 text-white flex items-center justify-between">
+    <div id="checkout-step-payment" class="hidden flex flex-col min-h-0">
+      <div class="p-4 border-b border-warm-200 bg-bobcat-600 text-white flex items-center justify-between flex-shrink-0">
         <h3 class="font-display font-bold">Complete Payment</h3>
-        <button id="checkout-close-payment" type="button" class="p-2 hover:bg-bobcat-700 rounded-lg">
+        <button id="checkout-close-payment" type="button" class="p-2 hover:bg-bobcat-700 rounded-lg flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <iframe
-        id="checkout-payment-iframe"
-        src=""
-        class="w-full h-[500px] border-0"
-        allow="payment"
-      ></iframe>
+      <div class="flex-1 min-h-[60vh] sm:min-h-[65vh] md:min-h-[70vh] flex flex-col">
+        <iframe
+          id="checkout-payment-iframe"
+          src=""
+          class="w-full flex-1 min-h-[55vh] sm:min-h-[60vh] md:min-h-[65vh] border-0"
+          allow="payment"
+        ></iframe>
+      </div>
     </div>
   </div>
 </div>
@@ -180,6 +182,13 @@
   import { getCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount } from '@lib/cart';
   import { createCheckout } from '@lib/api';
   import type { Cart, CartItem } from '@lib/cart';
+
+  // Fallback: storefront slug → GHL product ID (for checkout when item.ghlProductId missing, e.g. old cart)
+  const GHL_PRODUCT_ID_BY_SLUG: Record<string, string> = {
+    'magnetic-stethoscope-holder': '69669e09be5ec13a28c373e6',
+    'velcro-stethoscope-holder': '6966a2e7428a9ea75e30bc7a',
+    'nurse-fanny-pack': '6966a9b3e2a3866fa2c22921',
+  };
 
   // DOM Elements
   const cartButton = document.getElementById('cart-button');
@@ -389,13 +398,17 @@
     if (checkoutError) checkoutError.classList.add('hidden');
     showCheckoutStep('processing');
 
-    const items = cart.items.map(item => ({
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      ghlProductId: item.ghlProductId,
-      ghlPriceId: item.ghlPriceId,
-    }));
+    const items = cart.items.map(item => {
+      const ghlProductId = item.ghlProductId || GHL_PRODUCT_ID_BY_SLUG[item.productId];
+      return {
+        productId: ghlProductId || item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        ghlProductId: ghlProductId,
+        ghlPriceId: item.ghlPriceId,
+      };
+    });
 
     try {
       const result = await createCheckout({
@@ -413,7 +426,11 @@
       console.error('Checkout error:', error);
       showCheckoutStep('email');
       if (checkoutError) {
-        checkoutError.textContent = error.message || 'Failed to process checkout. Please try again.';
+        const msg = error?.message || '';
+        checkoutError.textContent =
+          /unprocessable|422|coupon could not be applied/i.test(msg)
+            ? msg
+            : msg || 'Failed to process checkout. Please try again.';
         checkoutError.classList.remove('hidden');
       }
     }

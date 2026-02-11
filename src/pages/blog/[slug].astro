@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { Image } from 'astro:assets';
-import { getBlogPosts } from '@lib/api';
+import { getBlogPosts, getProductBySlug } from '@lib/api';
 import { BLOG_HERO_IMAGE_ASSETS } from '@lib/blogHeroImageAssets';
 import { BLOG_PLACEHOLDER_SLUGS_ORDER } from '@lib/blogHeroImages';
 import { marked } from 'marked';
@@ -889,6 +889,46 @@ const postIndex = allPosts.length > 0
 const coverAsset = BLOG_HERO_IMAGE_ASSETS[(postIndex >= 0 ? postIndex : 0) % BLOG_HERO_IMAGE_ASSETS.length];
 post = { ...post, coverImage: coverAsset };
 
+// Featured products for "Shop Featured Products" – use API images so they match the actual product photos
+const FEATURED_PRODUCT_SLUGS = ['magnetic-stethoscope-holder', 'velcro-stethoscope-holder', 'nurse-fanny-pack'] as const;
+const FALLBACK_IMAGES: Record<string, string> = {
+  'magnetic-stethoscope-holder': '/images/products/magnetic-holder-1.jpg',
+  'velcro-stethoscope-holder': '/images/products/stethoscope-holder-1.jpg',
+  'nurse-fanny-pack': '/images/products/nurse-fanny-pack-1.jpg',
+};
+const FEATURED_NAMES: Record<string, string> = {
+  'magnetic-stethoscope-holder': 'Magnetic Stethoscope Holder',
+  'velcro-stethoscope-holder': 'Velcro Stethoscope Holder',
+  'nurse-fanny-pack': 'Nurse Fanny Pack',
+};
+const FEATURED_PRICES: Record<string, string> = {
+  'magnetic-stethoscope-holder': '$18.99',
+  'velcro-stethoscope-holder': '$18.99',
+  'nurse-fanny-pack': '$22.99',
+};
+
+let featuredProducts: { slug: string; name: string; price: string; imageSrc: string }[] = [];
+try {
+  const products = await Promise.all(FEATURED_PRODUCT_SLUGS.map((s) => getProductBySlug(s)));
+  featuredProducts = FEATURED_PRODUCT_SLUGS.map((s, i) => {
+    const p = products[i];
+    const imageSrc = p?.images?.[0]?.src || FALLBACK_IMAGES[s];
+    return {
+      slug: s,
+      name: FEATURED_NAMES[s],
+      price: FEATURED_PRICES[s],
+      imageSrc,
+    };
+  });
+} catch {
+  featuredProducts = FEATURED_PRODUCT_SLUGS.map((s) => ({
+    slug: s,
+    name: FEATURED_NAMES[s],
+    price: FEATURED_PRICES[s],
+    imageSrc: FALLBACK_IMAGES[s],
+  }));
+}
+
 const formattedDate = post.publishedAt
   ? new Date(post.publishedAt).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -956,27 +996,19 @@ const htmlContent = post.content ? await marked(post.content) : '';
       <div class="prose prose-lg prose-warm max-w-none" set:html={htmlContent} />
     </div>
 
-    <!-- Related Products CTA -->
+    <!-- Related Products CTA (uses API product images so they match the actual products) -->
     <div class="container-width max-w-4xl pb-12">
       <div class="bg-bobcat-50 rounded-2xl p-8">
         <h2 class="font-display text-2xl font-bold text-warm-900 mb-4">Shop Featured Products</h2>
         <p class="text-warm-600 mb-6">Gear designed by healthcare professionals, for healthcare professionals.</p>
         <div class="grid sm:grid-cols-3 gap-4">
-          <a href="/shop/product/magnetic-stethoscope-holder" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
-            <img src="/images/products/magnetic-holder-1.jpg" alt="Magnetic Stethoscope Holder" class="aspect-square object-cover rounded-lg mb-3" />
-            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Magnetic Stethoscope Holder</h3>
-            <p class="text-bobcat-600 font-bold">$18.99</p>
-          </a>
-          <a href="/shop/product/velcro-stethoscope-holder" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
-            <img src="/images/products/stethoscope-holder-1.jpg" alt="Velcro Stethoscope Holder" class="aspect-square object-cover rounded-lg mb-3" />
-            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Velcro Stethoscope Holder</h3>
-            <p class="text-bobcat-600 font-bold">$18.99</p>
-          </a>
-          <a href="/shop/product/nurse-fanny-pack" class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
-            <img src="/images/products/nurse-fanny-pack-1.jpg" alt="Nurse Fanny Pack" class="aspect-square object-cover rounded-lg mb-3" />
-            <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">Nurse Fanny Pack</h3>
-            <p class="text-bobcat-600 font-bold">$22.99</p>
-          </a>
+          {featuredProducts.map((p) => (
+            <a href={`/shop/product/${p.slug}`} class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
+              <img src={p.imageSrc} alt={p.name} class="aspect-square object-cover rounded-lg mb-3" loading="lazy" decoding="async" />
+              <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">{p.name}</h3>
+              <p class="text-bobcat-600 font-bold">{p.price}</p>
+            </a>
+          ))}
         </div>
         <div class="text-center mt-6">
           <a href="/shop" class="btn-primary">View All Products</a>

@@ -378,9 +378,17 @@ export async function deleteStaff(id: string): Promise<void> {
 // ==================== CHECKOUT ====================
 
 export async function createCheckout(data: {
-  items: { name: string; price: number; quantity: number }[];
+  items: {
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    ghlProductId?: string;
+    ghlPriceId?: string;
+  }[];
   customerEmail: string;
   customerName?: string;
+  couponCode?: string;
 }): Promise<{ paymentUrl: string }> {
   const response = await fetch(`${API_BASE}/storefront/checkout`, {
     method: 'POST',
@@ -388,6 +396,12 @@ export async function createCheckout(data: {
     body: JSON.stringify({ clientId: CLIENT_ID, ...data }),
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.message || 'Checkout failed');
+  if (!response.ok) {
+    const msg = result.message || result.error;
+    if (response.status === 422 && (!msg || /unprocessable|422/i.test(String(msg)))) {
+      throw new Error('The coupon code could not be applied. It may be invalid, expired, or not applicable to this order. Try removing it or use a different code.');
+    }
+    throw new Error(typeof msg === 'string' ? msg : 'Checkout failed');
+  }
   return result;
 }
