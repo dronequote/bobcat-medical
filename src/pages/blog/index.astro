@@ -2,143 +2,129 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import BlogCard from '@components/BlogCard.astro';
 import { getBlogPosts } from '@lib/api';
-import { BLOG_HERO_IMAGE_ASSETS } from '@lib/blogHeroImageAssets';
 
 let posts: any[] = [];
 
 try {
   posts = await getBlogPosts();
 } catch (e) {
-  // API error, will use placeholders
-}
-
-// Use placeholder posts if API returns empty or fails
-if (!posts || posts.length === 0) {
-  posts = [
-    {
-      _id: '1',
-      title: '10 Things Every Night Shift Nurse Needs',
-      slug: '10-things-every-night-shift-nurse-needs',
-      excerpt: 'Essential gear and tips for surviving and thriving on the night shift. From stethoscope holders to self-care essentials.',
-      coverImage: '/images/hero/nurse-working.jpg',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-15',
-      tags: ['Nursing Life', 'Night Shift', 'Gear Guide'],
-    },
-    {
-      _id: '2',
-      title: 'The Best Ways to Keep Your Stethoscope Accessible',
-      slug: 'best-ways-to-keep-stethoscope-accessible',
-      excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
-      coverImage: '/images/hero/healthcare-professional-conducting-a-checkup-with-2026-01-09-10-14-59-utc.webp',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-10',
-      tags: ['Gear Guide', 'Product Review'],
-    },
-    {
-      _id: '3',
-      title: 'Why Magnetic Stethoscope Holders Are Better',
-      slug: 'why-magnetic-stethoscope-holders-are-better',
-      excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
-      coverImage: '/images/hero/doctor-team-and-hospital-at-work-smile-together-f-2026-01-09-11-47-30-utc.webp',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-05',
-      tags: ['Product Spotlight', 'Gear Guide'],
-    },
-    {
-      _id: '4',
-      title: 'Self-Care Tips for Healthcare Workers',
-      slug: 'self-care-tips-for-healthcare-workers',
-      excerpt: 'Practical strategies for maintaining your physical and mental health while caring for others.',
-      coverImage: '/images/hero/portrait-of-smiling-doctor-with-colleagues-behind-2026-01-06-00-29-35-utc.webp',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-28',
-      tags: ['Wellness', 'Nursing Life', 'Mental Health'],
-    },
-    {
-      _id: '5',
-      title: 'Organizing Your Nursing Essentials: A Complete Guide',
-      slug: 'organizing-your-nursing-essentials',
-      excerpt: 'How to keep all your nursing supplies organized and accessible during busy shifts.',
-      coverImage: '/images/hero/patient-and-nurse-in-medical-consultation-2026-01-08-06-29-07-utc.webp',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-20',
-      tags: ['Gear Guide', 'Nursing Life', 'Organization'],
-    },
-    {
-      _id: '6',
-      title: 'How to Survive Your First Year as a Nurse',
-      slug: 'how-to-survive-first-year-nurse',
-      excerpt: 'Practical advice from experienced nurses on navigating the challenges of your first year in healthcare.',
-      coverImage: '/images/hero/hero-nurse.jpg',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-15',
-      tags: ['New Nurses', 'Career Advice', 'Nursing Life'],
-    },
-    {
-      _id: '7',
-      title: 'The Ultimate Scrub Pocket Essentials Checklist',
-      slug: 'scrub-pocket-essentials-checklist',
-      excerpt: 'Never forget a crucial tool again. Our comprehensive checklist covers everything you need in your pockets.',
-      coverImage: '/images/hero/smiling-multiethnic-group-of-doctors-scientists-i-2026-01-07-01-22-28-utc.webp',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-10',
-      tags: ['Gear Guide', 'Nursing Life', 'Organization'],
-    },
-    {
-      _id: '8',
-      title: 'Gift Ideas for Nurses: What They Actually Want',
-      slug: 'gift-ideas-for-nurses',
-      excerpt: 'Skip the cheesy "Nurses are angels" mugs. Here are gifts nurses will actually use and appreciate.',
-      coverImage: '/images/hero/hero-medical.jpg',
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-05',
-      tags: ['Gift Guide', 'Nursing Life'],
-    },
-  ];
+  // API error — show empty state
 }
 
 // Only show published posts
 const publishedPosts = posts.filter(p => p.published !== false);
-// Always use our hero image assets by index (optimized via Astro Image)
-const postsWithHeroImages = publishedPosts.map((p, i) => ({
-  ...p,
-  coverImage: BLOG_HERO_IMAGE_ASSETS[i % BLOG_HERO_IMAGE_ASSETS.length],
-}));
+
+// Featured: prefer explicitly featured post, fall back to first
+const featuredPost = publishedPosts.find(p => p.featured) || (publishedPosts.length > 0 ? publishedPosts[0] : null);
+const gridPosts = featuredPost ? publishedPosts.filter(p => p._id !== featuredPost._id) : [];
+
+const getAuthorName = (author: any) =>
+  typeof author === 'object' ? author?.name || 'Bobcat Medical Team' : author || 'Bobcat Medical Team';
+
+const formatDate = (date?: string) =>
+  date
+    ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : null;
 ---
 
 <BaseLayout
-  title="Blog"
-  description="Nursing stories, gear guides, and tips for healthcare professionals from Bobcat Medical."
+  title="Blog — Bobcat Medical"
+  description="Nursing stories, gear guides, medical equipment insights, and tips for healthcare professionals from Bobcat Medical."
 >
-  <!-- Hero -->
-  <section class="bg-bobcat-800 text-white py-16">
-    <div class="container-width text-center">
-      <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">Blog</h1>
-      <p class="text-bobcat-100 text-lg max-w-2xl mx-auto">
-        Stories, tips, and insights for healthcare professionals
-      </p>
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-gradient-to-b from-bobcat-800 via-bobcat-700 to-bobcat-800">
+    <!-- Decorative blurs -->
+    <div class="absolute top-0 left-1/4 w-[400px] h-[400px] rounded-full bg-bobcat-500/20 blur-[100px]"></div>
+    <div class="absolute bottom-0 right-1/4 w-[350px] h-[350px] rounded-full bg-coral-400/15 blur-[100px]"></div>
+    <div class="absolute inset-0 opacity-[0.3]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+    <div class="container-width relative z-10 pt-16 pb-10 lg:pt-20 lg:pb-12">
+      <div class="text-center mb-10 lg:mb-12">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-coral-600 mb-5">
+          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+          <span class="text-xs font-semibold text-white tracking-wider uppercase">Healthcare Insights</span>
+        </div>
+        <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+          Bobcat Medical Blog
+        </h1>
+        <p class="text-lg md:text-xl text-bobcat-100 max-w-2xl mx-auto leading-relaxed">
+          Stories, tips, and insights for healthcare professionals — from medical equipment guides to nursing best practices.
+        </p>
+      </div>
+
+      <!-- Featured Post Card -->
+      {featuredPost && (
+        <a href={`/blog/${featuredPost.slug}`} class="group block max-w-5xl mx-auto">
+          <article class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-5 hover:bg-white/15 transition-all duration-300">
+            <!-- Image — 3 of 5 cols -->
+            <div class="relative h-56 lg:h-[28rem] lg:col-span-3 overflow-hidden">
+              {featuredPost.coverImage ? (
+                <img
+                  src={featuredPost.coverImage}
+                  alt={featuredPost.title}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <div class="w-full h-full bg-gradient-to-br from-bobcat-600 to-coral-500 flex items-center justify-center">
+                  <svg class="w-16 h-16 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" />
+                  </svg>
+                </div>
+              )}
+              <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent lg:hidden"></div>
+            </div>
+
+            <!-- Content — 2 of 5 cols -->
+            <div class="p-6 lg:p-8 lg:col-span-2 flex flex-col justify-center">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-3 py-1 bg-coral-500 text-white text-xs font-bold uppercase tracking-wide rounded-full">
+                  Featured
+                </span>
+              </div>
+              <h2 class="font-display text-2xl lg:text-3xl font-bold text-white mb-3 group-hover:text-coral-200 transition-colors line-clamp-3 leading-tight">
+                {featuredPost.title}
+              </h2>
+              <p class="text-bobcat-100 text-base mb-5 line-clamp-3 leading-relaxed">
+                {featuredPost.excerpt}
+              </p>
+              <div class="flex items-center gap-3 text-xs text-bobcat-200">
+                <span class="font-medium">{getAuthorName(featuredPost.author)}</span>
+                {formatDate(featuredPost.publishedAt) && (
+                  <>
+                    <span class="text-white/30">|</span>
+                    <time>{formatDate(featuredPost.publishedAt)}</time>
+                  </>
+                )}
+              </div>
+            </div>
+          </article>
+        </a>
+      )}
     </div>
   </section>
 
-  <!-- Blog Posts -->
-  <section class="section-padding bg-warm-50">
-    <div class="container-width">
-      {postsWithHeroImages.length > 0 ? (
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {postsWithHeroImages.map((post) => (
+  <!-- Blog Grid -->
+  <section class="pt-10 pb-16 bg-warm-100 relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-bobcat-800 to-transparent pointer-events-none z-10"></div>
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-bobcat-100/40 blur-[150px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-coral-100/30 blur-[130px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+
+    <div class="container-width max-w-6xl relative z-10">
+      {gridPosts.length > 0 ? (
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {gridPosts.map((post) => (
             <BlogCard
               title={post.title}
               slug={post.slug}
               excerpt={post.excerpt}
               coverImage={post.coverImage}
-              author={post.author}
+              author={getAuthorName(post.author)}
               publishedAt={post.publishedAt}
               tags={post.tags}
             />
           ))}
         </div>
-      ) : (
+      ) : !featuredPost ? (
         <div class="text-center py-16">
           <svg class="w-16 h-16 text-warm-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
@@ -146,7 +132,32 @@ const postsWithHeroImages = publishedPosts.map((p, i) => ({
           <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No posts yet</h2>
           <p class="text-warm-500">Check back soon for nursing stories and tips!</p>
         </div>
-      )}
+      ) : null}
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-r from-bobcat-700 via-bobcat-800 to-bobcat-700 relative overflow-hidden">
+    <div class="absolute inset-0">
+      <div class="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/5 animate-pulse"></div>
+      <div class="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/5 animate-pulse" style="animation-delay: 1.5s;"></div>
+    </div>
+    <div class="container-width text-center relative z-10">
+      <h2 class="font-display text-3xl font-bold text-white mb-4">
+        Quality Medical Equipment You Can Trust
+      </h2>
+      <p class="text-bobcat-100 mb-8 max-w-2xl mx-auto">
+        From mobility aids to respiratory equipment, Bobcat Medical provides the healthcare products you need with personalized service.
+      </p>
+      <a
+        href="/shop"
+        class="inline-flex items-center px-8 py-4 bg-coral-500 text-white font-semibold rounded-lg hover:bg-coral-600 transition shadow-lg"
+      >
+        Shop Products
+        <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
     </div>
   </section>
 </BaseLayout>

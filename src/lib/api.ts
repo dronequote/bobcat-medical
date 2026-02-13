@@ -165,6 +165,8 @@ export async function deleteCategory(id: string): Promise<void> {
 
 // ==================== BLOG POSTS ====================
 
+const BOBCAT_LOCATION_ID = 'WpD7EkK85yOehQLmDtrR';
+
 export interface BlogPost {
   _id: string;
   title: string;
@@ -172,25 +174,78 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   coverImage?: string;
-  author: string;
+  author: string | { name: string; avatar?: string };
   tags: string[];
-  relatedProductIds: string[];
+  relatedProductIds?: string[];
+  category?: string;
+  featured?: boolean;
   published: boolean;
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
+  viewCount?: number;
+  heroStyle?: string;
+  ctaType?: string;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    ogImage?: string;
+    noIndex?: boolean;
+    canonicalUrl?: string;
+  };
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  const response = await fetch(`${API_BASE}/storefront/${CLIENT_ID}/blog`);
+  const response = await fetch(`${API_BASE}/blog/posts?locationId=${BOBCAT_LOCATION_ID}&limit=100`);
   const data = await response.json();
-  // API returns array directly
-  return Array.isArray(data) ? data : [];
+  if (data.success && data.data?.posts) {
+    return data.data.posts.map((p: any) => ({
+      ...p,
+      author: typeof p.author === 'object' ? p.author.name : (p.author || 'Bobcat Medical Team'),
+    }));
+  }
+  return [];
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const posts = await getBlogPosts();
-  return posts.find(p => p.slug === slug) || null;
+  const response = await fetch(`${API_BASE}/blog/posts/${encodeURIComponent(slug)}?locationId=${BOBCAT_LOCATION_ID}`);
+  const data = await response.json();
+  return data.success && data.data ? data.data : null;
+}
+
+export interface CtaData {
+  heading: string;
+  description: string;
+  buttonText: string;
+  href: string;
+  gradient: string;
+}
+
+export async function getCtaBySlug(ctaSlug?: string): Promise<CtaData | null> {
+  if (!ctaSlug || ctaSlug === 'none') return null;
+  try {
+    const response = await fetch(`${API_BASE}/blog/ctas?locationId=${BOBCAT_LOCATION_ID}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.success) return null;
+    return data.data.find((c: any) => c.slug === ctaSlug) || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getRelatedPosts(category: string, excludeSlug: string): Promise<BlogPost[]> {
+  try {
+    const params = new URLSearchParams({ locationId: BOBCAT_LOCATION_ID, category, limit: '4' });
+    const response = await fetch(`${API_BASE}/blog/posts?${params}`);
+    const data = await response.json();
+    if (!data.success) return [];
+    const posts = data.data?.posts || (Array.isArray(data.data) ? data.data : []);
+    return posts.filter((p: BlogPost) => p.slug !== excludeSlug).slice(0, 3);
+  } catch {
+    return [];
+  }
 }
 
 export async function getAdminBlogPosts(): Promise<BlogPost[]> {

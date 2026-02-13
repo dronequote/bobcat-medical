@@ -60,20 +60,20 @@ const formattedDate = publishedAt
     {tags && tags.length > 0 && (
       <div class="flex flex-wrap gap-2 mb-3">
         {tags.slice(0, 3).map((tag) => (
-          <span class="text-xs bg-bobcat-50 text-bobcat-600 px-2 py-1 rounded-full">
+          <span class="text-xs font-medium bg-bobcat-50 text-bobcat-600 px-2.5 py-1 rounded-full">
             {tag}
           </span>
         ))}
       </div>
     )}
-    <h3 class="font-display text-xl font-bold text-warm-900 mb-2">
+    <h3 class="font-display text-xl font-bold text-warm-900 mb-2 leading-tight">
       <a href={`/blog/${slug}`} class="hover:text-bobcat-600 transition-colors">
         {title}
       </a>
     </h3>
     <p class="text-warm-600 text-sm mb-4 line-clamp-2">{excerpt}</p>
     <div class="flex items-center justify-between text-sm text-warm-500">
-      <span>{author}</span>
+      <span class="font-medium">{author}</span>
       {formattedDate && <span>{formattedDate}</span>}
     </div>
   </div>

@@ -1,1024 +1,471 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import { Image } from 'astro:assets';
-import { getBlogPosts, getProductBySlug } from '@lib/api';
-import { BLOG_HERO_IMAGE_ASSETS } from '@lib/blogHeroImageAssets';
-import { BLOG_PLACEHOLDER_SLUGS_ORDER } from '@lib/blogHeroImages';
-import { marked } from 'marked';
+import BlogCard from '@components/BlogCard.astro';
+import { getBlogPostBySlug, getRelatedPosts, getCtaBySlug } from '@lib/api';
+import type { CtaData } from '@lib/api';
 
 const { slug } = Astro.params;
 
-const allPosts = await getBlogPosts().catch(() => []);
-let post: any = allPosts.length > 0 ? allPosts.find((p: any) => p.slug === slug) ?? null : null;
-
-// Use placeholders if API returns nothing or no matching post
-if (!post) {
-  const placeholders: Record<string, any> = {
-    '10-things-every-night-shift-nurse-needs': {
-      _id: '1',
-      title: '10 Things Every Night Shift Nurse Needs',
-      slug: '10-things-every-night-shift-nurse-needs',
-      excerpt: 'Essential gear and tips for surviving and thriving on the night shift.',
-      coverImage: '/images/hero/nurse-working.jpg',
-      content: `
-## Working the night shift?
-
-Night shift nursing is a unique challenge that requires special preparation. After countless conversations with nurses who work the overnight hours, we've compiled the ultimate list of must-haves for surviving—and thriving—during those long nights.
-
-### 1. A Great Stethoscope Holder
-
-Your stethoscope is your lifeline, but constantly draping it around your neck or stuffing it in your pocket gets old fast. A **magnetic stethoscope holder** keeps it secure, accessible, and out of your way. One quick grab and you're ready to assess your patient. No more fishing around or worrying about it falling on the floor.
-
-*Pro tip: Our [Magnetic Stethoscope Holder](/shop/product/magnetic-stethoscope-holder) features a strong rare-earth magnet that won't let go until you need it to.*
-
-### 2. Comfortable Compression Socks
-
-Twelve hours on your feet is no joke. Compression socks improve circulation, reduce swelling, and can genuinely make the difference between dragging yourself to your car and walking out feeling human. Invest in a few good pairs—your legs will thank you.
-
-### 3. A Reliable Fanny Pack
-
-Pens, scissors, alcohol swabs, your phone, a granola bar—you need quick access to a lot of stuff. A well-designed [nurse fanny pack](/shop/product/nurse-fanny-pack) keeps everything organized and within reach, so you're not constantly running back to the nurses' station.
-
-### 4. Quality Snacks
-
-The vending machine at 3 AM is not your friend. Pack protein-rich snacks like nuts, cheese, and Greek yogurt. Your energy levels (and your waistline) will appreciate it. Bonus points if you meal prep for the whole week.
-
-### 5. A Good Water Bottle
-
-Dehydration sneaks up on you during busy shifts. Keep a large, insulated water bottle at your station and set reminders to drink if you have to. Your body can't function at its best without proper hydration.
-
-### 6. Blue Light Blocking Glasses
-
-Hospital fluorescent lights are harsh, and if you're trying to flip your sleep schedule, excessive blue light exposure makes it harder. Blue light blocking glasses can help reduce eye strain and might help you fall asleep easier after your shift.
-
-### 7. Caffeine (In Moderation)
-
-Strategic caffeine use is key. A cup of coffee at the start of your shift? Great. Chugging energy drinks at 4 AM? You'll regret it when you're staring at the ceiling at noon trying to sleep. Find your balance.
-
-### 8. A Cozy Jacket or Sweater
-
-Hospitals love their air conditioning. A lightweight jacket you can throw on when you're charting or during slower moments can make a big difference in your comfort level.
-
-### 9. Quality Hand Cream
-
-Washing your hands dozens of times per shift takes a toll on your skin. Keep a small tube of heavy-duty hand cream in your pocket. Apply it during brief moments of downtime—cracked, painful hands are no fun.
-
-### 10. A Positive Attitude
-
-This might sound cliché, but mindset matters. Night shift can be isolating and exhausting, but it also has its perks—often a tighter-knit team, fewer visitors to navigate, and the satisfaction of being there when patients need you most. Find the positives and lean into them.
-
----
-
-## Ready to gear up?
-
-Check out our [shop](/shop) for nurse-approved accessories that make every shift a little easier. Because you deserve gear that works as hard as you do.
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-15',
-      tags: ['Nursing Life', 'Night Shift', 'Gear Guide'],
-    },
-    'best-ways-to-keep-stethoscope-accessible': {
-      _id: '2',
-      title: 'The Best Ways to Keep Your Stethoscope Accessible',
-      slug: 'best-ways-to-keep-stethoscope-accessible',
-      excerpt: 'Compare different stethoscope holder options and find the best solution for your workflow.',
-      coverImage: '/images/hero/healthcare-professional-conducting-a-checkup-with-2026-01-09-10-14-59-utc.webp',
-      content: `
-## The Stethoscope Struggle Is Real
-
-Every nurse knows the feeling: you need to quickly assess a patient, but your stethoscope is... where exactly? Around your neck (uncomfortable)? In your pocket (bulky)? On the counter somewhere (unsanitary)?
-
-Let's break down the most popular ways to carry your stethoscope and find the best option for your workflow.
-
-### Option 1: Around Your Neck
-
-**The Classic Approach**
-
-This is how most of us started, and for good reason—it's simple and keeps your stethoscope within reach.
-
-**Pros:**
-- Always accessible
-- No additional accessories needed
-- You look like a healthcare professional
-
-**Cons:**
-- Neck strain after long shifts
-- Gets in the way when leaning over patients
-- Can feel heavy with quality stethoscopes
-- Potential infection control concern
-
-**Verdict:** Works in a pinch, but there are better options for long shifts.
-
-### Option 2: In Your Pocket
-
-**The Pocket Stuffer**
-
-Many nurses try to shove their stethoscope into scrub pockets. Results vary.
-
-**Pros:**
-- Out of the way
-- Free neck and shoulders
-
-**Cons:**
-- Bulky and uncomfortable
-- Difficult to retrieve quickly
-- Stretches out your scrub pockets
-- Tubing can get kinked
-
-**Verdict:** Not ideal for quick-access situations.
-
-### Option 3: Clip-On Holders
-
-**The Traditional Holder**
-
-Basic plastic or fabric clips that attach to your waistband.
-
-**Pros:**
-- Inexpensive
-- Lightweight
-- Keeps stethoscope accessible
-
-**Cons:**
-- Can fall off
-- Limited weight capacity
-- Some feel flimsy
-
-**Verdict:** A budget-friendly option, but durability can be an issue.
-
-### Option 4: Velcro Stethoscope Holders
-
-**The Secure Choice**
-
-Hook-and-loop (Velcro) holders wrap around your stethoscope tubing and attach to your scrubs.
-
-**Pros:**
-- Secure attachment
-- Easy to use
-- Works with most scrub fabrics
-- Adjustable positioning
-
-**Cons:**
-- Velcro can wear out over time
-- May not work well with all fabric types
-
-**Verdict:** A reliable choice for most nurses. Check out our [Velcro Stethoscope Holder](/shop/product/velcro-stethoscope-holder) for a durable option.
-
-### Option 5: Magnetic Stethoscope Holders
-
-**The Game Changer**
-
-Magnetic holders use powerful magnets to secure your stethoscope to your scrubs with a simple click.
-
-**Pros:**
-- One-hand operation
-- Strong hold that won't accidentally release
-- Quick grab-and-go access
-- Works through fabric
-- No wear and tear on attachment mechanism
-
-**Cons:**
-- Slightly higher price point
-- Need to avoid placing near credit cards or electronic devices
-
-**Verdict:** Our top recommendation for busy healthcare professionals. The [Magnetic Stethoscope Holder](/shop/product/magnetic-stethoscope-holder) is a favorite among ER and ICU nurses who need fast access.
-
----
-
-## Our Recommendation
-
-After talking with hundreds of nurses, we've found that **magnetic holders** consistently get the highest satisfaction ratings. The combination of security and quick access makes them ideal for fast-paced healthcare environments.
-
-That said, **velcro holders** are a close second and work great for those who prefer a more traditional feel or work in environments where magnets might be a concern.
-
----
-
-## Find Your Perfect Holder
-
-Browse our collection of [stethoscope holders](/shop?category=stethoscope-holders) to find the right fit for your workflow. Every product is designed with input from real healthcare professionals who understand what you need.
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-10',
-      tags: ['Gear Guide', 'Product Review'],
-    },
-    'why-magnetic-stethoscope-holders-are-better': {
-      _id: '3',
-      title: 'Why Magnetic Stethoscope Holders Are Better',
-      slug: 'why-magnetic-stethoscope-holders-are-better',
-      excerpt: 'A deep dive into the benefits of magnetic stethoscope holders for busy healthcare professionals.',
-      coverImage: '/images/hero/doctor-team-and-hospital-at-work-smile-together-f-2026-01-09-11-47-30-utc.webp',
-      content: `
-## The Magnetic Advantage
-
-When it comes to keeping your stethoscope accessible during busy shifts, not all holders are created equal. After extensive testing and feedback from healthcare professionals across the country, we've become big believers in magnetic stethoscope holders. Here's why.
-
-### 1. Lightning-Fast Access
-
-In healthcare, seconds matter. When a patient's condition changes or you need to quickly assess someone, fumbling with clips or straps costs precious time.
-
-With a magnetic holder, it's literally **grab and go**. The stethoscope releases instantly when you pull it, and re-attaching takes about half a second—just bring it near the magnet and it snaps into place.
-
-*"I work in the ER and the magnetic holder has genuinely changed how I work. I can go from charting to listening to a patient's lungs in one fluid motion."* — Dr. Emily Torres, Emergency Medicine
-
-### 2. Secure Hold
-
-The number one concern we hear about magnetic holders: "Will it actually stay on?"
-
-The answer is a resounding yes. Quality magnetic holders use **rare-earth neodymium magnets** that provide an incredibly strong hold. Your stethoscope isn't going anywhere until you intentionally remove it.
-
-We've tested ours through:
-- Running (yes, actual running down hallways)
-- Bending and squatting
-- Lifting patients
-- Full 12-hour shifts
-
-The stethoscope stays put.
-
-### 3. No Wear and Tear
-
-Traditional holders rely on mechanical mechanisms—clips that can break, velcro that wears out, elastic that loses its stretch. These components have a limited lifespan.
-
-Magnets, on the other hand, maintain their strength for decades. There are no moving parts to fail. The magnetic holder you buy today will work just as well in five years.
-
-### 4. Works Through Fabric
-
-One of the clever aspects of magnetic holders is that you don't need to directly attach anything to your stethoscope. The system uses two magnetic components—one clips to your scrubs, one to your stethoscope—and they attract through the fabric.
-
-This means:
-- No holes in your scrubs
-- Easy to transfer between different outfits
-- Works with any fabric thickness
-
-### 5. One-Handed Operation
-
-Try this: while holding a chart or medication, attach a stethoscope to a traditional clip. Frustrating, right?
-
-Magnetic holders are inherently one-handed. Just bring the stethoscope near the magnet and let physics do the work. This is especially valuable when your other hand is occupied (which, let's be honest, is most of the time).
-
-### 6. Professional Appearance
-
-A dangling stethoscope or one crammed in a pocket doesn't exactly scream "I have my life together." Magnetic holders keep your stethoscope neatly positioned at your side, looking professional and intentional.
-
-### 7. Infection Control
-
-Because there's no need to touch clasps, clips, or straps, magnetic holders minimize contact points. You grab your stethoscope by the part you're going to use anyway—the chest piece or earpieces—rather than handling a potentially contaminated holder mechanism.
-
----
-
-## Common Concerns Addressed
-
-### "What about my credit cards?"
-
-Valid concern! Magnets can damage magnetic strips on cards. The solution is simple: don't store cards directly against the magnet. Keep them in a badge holder, wallet, or separate pocket. In practice, this isn't an issue for most users.
-
-### "Will it affect my phone?"
-
-Modern smartphones are not affected by the strength of magnets used in stethoscope holders. You can safely keep your phone in an adjacent pocket.
-
-### "What if I have a pacemaker?"
-
-While the magnets in stethoscope holders are small, if you have an implanted medical device, consult with your physician before using magnetic accessories near your chest. Most people position the holder at their waist, which provides adequate distance.
-
----
-
-## Ready to Make the Switch?
-
-Experience the difference yourself. Our [Magnetic Stethoscope Holder](/shop/product/magnetic-stethoscope-holder) is designed by healthcare professionals who were tired of the limitations of traditional holders.
-
-Strong. Secure. Simple. That's the magnetic advantage.
-
-[Shop Magnetic Holders →](/shop?category=stethoscope-holders)
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2026-01-05',
-      tags: ['Product Spotlight', 'Gear Guide'],
-    },
-    'self-care-tips-for-healthcare-workers': {
-      _id: '4',
-      title: 'Self-Care Tips for Healthcare Workers',
-      slug: 'self-care-tips-for-healthcare-workers',
-      excerpt: 'Practical strategies for maintaining your physical and mental health while caring for others.',
-      coverImage: '/images/hero/portrait-of-smiling-doctor-with-colleagues-behind-2026-01-06-00-29-35-utc.webp',
-      content: `
-## You Can't Pour From an Empty Cup
-
-Healthcare workers spend their days caring for others, but who takes care of you? Burnout, compassion fatigue, and physical exhaustion are real challenges in our profession. Here are practical self-care strategies that actually work for busy healthcare professionals.
-
-### Physical Self-Care
-
-#### Prioritize Sleep
-
-Yes, you've heard it before. But sleep isn't optional—it's foundational. If you work rotating shifts:
-- Keep your bedroom dark and cool
-- Invest in blackout curtains
-- Use white noise to block daytime sounds
-- Stick to a consistent sleep schedule, even on days off
-
-#### Move Your Body (Outside of Work)
-
-Running between patient rooms doesn't count as exercise. Your body needs intentional movement that isn't tied to stress:
-- Try yoga or stretching for tension relief
-- Take walks in nature on your days off
-- Strength training helps combat the physical demands of patient care
-
-#### Fuel Yourself Properly
-
-It's easy to survive on coffee and vending machine snacks, but your body needs real nutrition:
-- Meal prep on days off
-- Keep healthy snacks in your locker
-- Stay hydrated—aim for half your body weight in ounces of water daily
-
-### Mental Self-Care
-
-#### Set Boundaries
-
-It's okay to say no. You don't have to pick up every extra shift. You don't have to be everyone's emotional support. Setting boundaries isn't selfish—it's survival.
-
-#### Process Difficult Experiences
-
-Healthcare exposes you to trauma. That doesn't mean you have to carry it alone:
-- Talk to colleagues who understand
-- Consider a therapist who specializes in healthcare workers
-- Journaling can help process complex emotions
-
-#### Disconnect From Work
-
-When you're off, be **off**. Don't check work emails. Don't doomscroll medical news. Give your brain a genuine break from healthcare content.
-
-### Emotional Self-Care
-
-#### Cultivate Relationships Outside Healthcare
-
-Having friends and family who don't work in healthcare provides valuable perspective. Spend time with people who remind you there's a world outside the hospital.
-
-#### Find Joy in Small Things
-
-What made you happy before you became a healthcare worker? Reconnect with those hobbies. Read fiction. Watch silly shows. Play video games. Do things purely for enjoyment.
-
-#### Practice Gratitude
-
-It sounds cliché, but it works. Even on hard days, there are moments worth acknowledging. Some people keep a gratitude journal. Others simply take a moment at the end of each shift to note one positive thing.
-
-### Professional Self-Care
-
-#### Invest in Quality Gear
-
-Using well-designed equipment makes your job easier. Uncomfortable scrubs, a heavy stethoscope around your neck, disorganized pockets—these small irritations add up. Invest in gear that supports you. (Shameless plug: That's exactly why we created [Bobcat Medical](/shop).)
-
-#### Advocate for Yourself
-
-Speak up about unsafe staffing ratios. Push back on unreasonable expectations. Your voice matters. Change happens when healthcare workers advocate collectively.
-
-#### Keep Learning
-
-Professional development isn't just about advancing your career. Learning new skills and staying current in your field can reignite your passion for healthcare.
-
----
-
-## Start Small
-
-You don't have to overhaul your entire life overnight. Pick one thing from this list and focus on it this week. Small, consistent changes create sustainable habits.
-
-Remember: Taking care of yourself isn't selfish. It's necessary. Your patients need you at your best, and you deserve to feel good too.
-
----
-
-*What self-care strategies work for you? Share with us on [Instagram](https://www.instagram.com/bobcatmedical).*
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-28',
-      tags: ['Wellness', 'Nursing Life', 'Mental Health'],
-    },
-    'organizing-your-nursing-essentials': {
-      _id: '5',
-      title: 'Organizing Your Nursing Essentials: A Complete Guide',
-      slug: 'organizing-your-nursing-essentials',
-      excerpt: 'How to keep all your nursing supplies organized and accessible during busy shifts.',
-      coverImage: '/images/hero/patient-and-nurse-in-medical-consultation-2026-01-08-06-29-07-utc.webp',
-      content: `
-## The Chaos of Nursing Supplies
-
-We've all been there: you need scissors, but they're... somewhere. Alcohol swabs? Maybe in your left pocket. Or was it the right? Your phone just buzzed but it's buried under a pile of flushes and gauze.
-
-Let's bring some order to the chaos.
-
-### Why Organization Matters
-
-Beyond the obvious frustration of not finding what you need, disorganization has real consequences:
-- **Time wasted** searching for supplies adds up over a shift
-- **Patient care suffers** when you're distracted by logistics
-- **Stress increases** when you can't rely on your systems
-
-Good organization isn't about being Type A—it's about creating systems that support you so you can focus on what matters: your patients.
-
-### The Essential Nursing Carry
-
-Every nurse's exact loadout varies, but here's what most of us carry:
-
-**The Non-Negotiables:**
-- Stethoscope
-- Penlight
-- Hemostats or bandage scissors
-- Pens (at least 3—they disappear)
-- Permanent marker
-- Phone
-
-**The Nice-to-Haves:**
-- Small notebook or brain sheet
-- Alcohol swabs
-- Flushes
-- Tape
-- Personal hand sanitizer
-- Lip balm
-- Snacks
-
-### Organizing Strategies That Work
-
-#### 1. Dedicated Pockets for Dedicated Items
-
-Assign each item a specific location and stick to it religiously. After a week, reaching for your penlight becomes muscle memory.
-
-**Example setup:**
-- Right scrub pocket: Phone, penlight
-- Left scrub pocket: Pens, marker
-- Fanny pack front: Scissors, hemostats, alcohol swabs
-- Fanny pack back: Personal items (lip balm, snacks, hand cream)
-
-#### 2. Invest in a Quality Fanny Pack
-
-Scrub pockets are limited. A good [nurse fanny pack](/shop/product/nurse-fanny-pack) multiplies your carrying capacity without the bulk of a traditional bag.
-
-Look for:
-- Multiple compartments for organization
-- Easy-clean material
-- Comfortable fit that doesn't ride up
-- Secure closures
-
-#### 3. Keep Your Stethoscope Accessible (Not Around Your Neck)
-
-A [stethoscope holder](/shop?category=stethoscope-holders) frees your neck from strain while keeping your most-used tool within instant reach. Whether you prefer magnetic or velcro, find a system that works for you.
-
-#### 4. Pre-Shift Pocket Check
-
-Before every shift, do a quick inventory:
-- All items in their designated spots?
-- Pens working?
-- Phone charged?
-- Essential supplies stocked?
-
-This 60-second routine prevents the mid-shift scramble.
-
-#### 5. End-of-Shift Reset
-
-Empty your pockets completely after each shift. Clean out trash, restock supplies, and return everything to its home. Starting fresh each shift prevents accumulation of random items.
-
-### Common Organization Mistakes
-
-**Overpacking:** You don't need to carry everything. If you're weighed down like a pack mule, you're probably carrying items that could stay in your locker or at the nurses' station.
-
-**No system:** Randomly shoving things in pockets means you're always searching. Take time to create a system.
-
-**Ignoring comfort:** If your organizational tools are uncomfortable (a heavy fanny pack, a scratchy stethoscope holder), you won't use them consistently.
-
-**Not adapting:** What works in one unit might not work in another. Float to a different department? You might need to adjust your loadout.
-
----
-
-## Your Perfect Setup
-
-Everyone's needs are slightly different. The key is finding a system that works for YOUR specific role and sticking with it long enough to build habits.
-
-Browse our collection of [nurse accessories](/shop?category=nurse-accessories) designed specifically for healthcare professionals who need organization that keeps up with their demanding shifts.
-
-*What's in your pockets? Share your setup with us on [social media](https://www.instagram.com/bobcatmedical)!*
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-20',
-      tags: ['Gear Guide', 'Nursing Life', 'Organization'],
-    },
-    'how-to-survive-first-year-nurse': {
-      _id: '6',
-      title: 'How to Survive Your First Year as a Nurse',
-      slug: 'how-to-survive-first-year-nurse',
-      excerpt: 'Practical advice from experienced nurses on navigating the challenges of your first year in healthcare.',
-      coverImage: '/images/hero/hero-nurse.jpg',
-      content: `
-## Your First Year: A Survival Guide
-
-Congratulations! You passed NCLEX, landed your first nursing job, and now the real learning begins. The first year of nursing is notoriously challenging—but also incredibly rewarding. Here's what experienced nurses wish they'd known from day one.
-
-### The Reality Check
-
-Let's be honest: nursing school prepared you for the exams, not entirely for the job. You'll feel overwhelmed. You'll question whether you made the right choice. You'll cry in the supply closet (we've all been there).
-
-This is normal. It doesn't mean you're a bad nurse—it means you're human.
-
-### Practical Tips That Actually Help
-
-#### 1. Find Your People
-
-Identify the experienced nurses who want to help new grads succeed. Every unit has them—the ones who answer questions without judgment and share their shortcuts. These are your lifelines.
-
-Equally important: find other new nurses going through the same experience. Having someone to debrief with after a tough shift is invaluable.
-
-#### 2. Write Everything Down
-
-Get a small notebook that fits in your pocket. Write down:
-- Important phone extensions
-- Normal lab values
-- Medication doses you look up repeatedly
-- Tips from experienced nurses
-- Questions to research later
-
-Your brain can only hold so much. Don't trust it to remember everything.
-
-#### 3. Invest in Quality Gear Early
-
-Uncomfortable shoes will destroy your feet. A stethoscope around your neck will hurt by hour six. Disorganized pockets mean wasted time.
-
-Spend money on:
-- **Quality shoes** with proper support
-- **A stethoscope holder** that keeps your scope accessible without the neck pain
-- **A good watch** with a second hand for pulses and respirations
-- **Compression socks** for those 12-hour shifts
-
-The small investments make a big difference in your comfort and efficiency.
-
-#### 4. Ask Questions (Seriously)
-
-You will not know everything. That's okay—it's expected. What's NOT okay is pretending you know something when you don't.
-
-Good questions to ask:
-- "Can you show me how you do this?"
-- "What should I watch for with this patient?"
-- "Is there a better/faster way to do this?"
-- "I've never done this before—can you walk me through it?"
-
-No one expects you to be an expert. They expect you to be safe and willing to learn.
-
-#### 5. Master Time Management
-
-Time management is the hardest skill to develop, and it takes months to get comfortable. Some tips:
-
-- **Cluster your care** when possible
-- **Anticipate needs** before they become urgent
-- **Don't chart later**—chart as you go when possible
-- **Set alarms** for time-sensitive medications
-- **Build in buffer time** for the unexpected
-
-#### 6. Take Care of Yourself
-
-You cannot pour from an empty cup. First-year nurses often neglect their own health trying to prove themselves. Don't.
-
-- **Sleep** is not optional
-- **Eat actual meals**, not just vending machine snacks
-- **Stay hydrated**—keep water at your station
-- **Use your days off** to actually rest
-
-### The Emotional Side
-
-#### It Gets Easier
-
-The overwhelming feeling does fade. Around month 3-6, things start to click. By year one, you'll look back and be amazed at how much you've grown.
-
-#### You Will Make Mistakes
-
-Every nurse makes mistakes. The difference between a good nurse and a dangerous one isn't the absence of errors—it's how they handle them.
-
-- **Report errors** immediately and honestly
-- **Learn from mistakes** without spiraling into shame
-- **Implement systems** to prevent repeating errors
-
-#### Patient Deaths Are Hard
-
-You will lose patients. Some deaths will be expected; others will blindside you. There's no "right" way to grieve.
-
-- It's okay to cry
-- Talk to colleagues who understand
-- Seek professional support if needed
-- Remember: the fact that it affects you means you care
-
-### Resources for New Nurses
-
-- **Your facility's new grad program** (use every resource they offer)
-- **Preceptors and mentors** (stay in touch even after orientation ends)
-- **Online nursing communities** (for questions you're embarrassed to ask in person)
-- **Continuing education** (never stop learning)
-
----
-
-## You've Got This
-
-The first year is hard. There's no sugarcoating it. But millions of nurses have survived it, and you will too. The key is to stay humble, keep learning, ask for help, and take care of yourself.
-
-One year from now, you'll be the one helping a new grad find their feet. And you'll remember exactly how it felt.
-
-*Need gear that makes your shifts easier? [Browse our collection](/shop) designed by nurses who've been exactly where you are.*
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-15',
-      tags: ['New Nurses', 'Career Advice', 'Nursing Life'],
-    },
-    'scrub-pocket-essentials-checklist': {
-      _id: '7',
-      title: 'The Ultimate Scrub Pocket Essentials Checklist',
-      slug: 'scrub-pocket-essentials-checklist',
-      excerpt: 'Never forget a crucial tool again. Our comprehensive checklist covers everything you need in your pockets.',
-      coverImage: '/images/hero/smiling-multiethnic-group-of-doctors-scientists-i-2026-01-07-01-22-28-utc.webp',
-      content: `
-## The Complete Pocket Checklist
-
-There's an art to packing your scrub pockets. Too little, and you're constantly running back to the nurses' station. Too much, and you're a walking supply closet. Let's find the sweet spot.
-
-### The Non-Negotiables
-
-These items should be on your person at all times:
-
-#### Writing Tools
-- **3-4 pens** (they disappear—accept this)
-- **1 permanent marker** (for labeling tubes, bags, dressings)
-- **1 highlighter** (optional, but useful for some workflows)
-
-*Pro tip: Click pens are less likely to leak than cap pens, but cap pens are less likely to accidentally mark your scrubs.*
-
-#### Assessment Tools
-- **Penlight** (compact LED versions last forever)
-- **Stethoscope** (with a proper [holder](/shop?category=stethoscope-holders) so it's not around your neck)
-- **Bandage scissors** or trauma shears (on a retractable clip)
-
-#### Time & Communication
-- **Watch with second hand** (digital or analog, just needs seconds)
-- **Phone** (if allowed—many facilities now encourage them for communication apps)
-- **Badge with required ID**
-
-### The "Nice to Have" List
-
-These items are helpful but not critical for every shift:
-
-#### Medical Supplies
-- Alcohol swabs (a few in a baggie)
-- Small roll of tape
-- Hemostats
-- Personal hand sanitizer (the good stuff, not the hospital-issue)
-- Gloves (a pair in case you need them between supply rooms)
-
-#### Personal Care
-- Lip balm (hospital air is DRY)
-- Hand cream (for when you get a moment)
-- Breath mints or gum
-- Hair ties (if applicable)
-
-#### Snacks & Hydration
-- Small protein bar or snacks
-- Electrolyte packets
-- Note: Keep a water bottle at your station, not in your pocket
-
-### The Organizational System
-
-Having the right stuff means nothing if you can't find it. Create a system:
-
-#### Left Pocket
-- Phone
-- Personal items (lip balm, hand cream)
-- Snacks
-
-#### Right Pocket
-- Pens and marker
-- Penlight
-- Small notebook or "brain" sheet
-
-#### Fanny Pack / Accessory Pouch
-This is where having a [good nurse fanny pack](/shop/product/nurse-fanny-pack) pays off:
-- Scissors/shears
-- Tape
-- Alcohol swabs
-- Hemostats
-- Flushes
-- Anything bulky that doesn't fit in scrub pockets
-
-#### Stethoscope
-On a [magnetic holder](/shop/product/magnetic-stethoscope-holder) or [velcro holder](/shop/product/velcro-stethoscope-holder) at your waist or chest—NOT around your neck for 12 hours.
-
-### What NOT to Carry
-
-Some things seem useful but aren't worth the pocket real estate:
-
-- **Full medication guides** (use your phone app)
-- **Multiple colors of tape** (grab from supply as needed)
-- **Personal valuables** (keep in locker)
-- **Bulk supplies** (restock as needed, don't hoard)
-- **Anything you haven't used in the last 5 shifts**
-
-### Unit-Specific Additions
-
-Different specialties have different needs:
-
-#### ICU/Critical Care
-- Calculator (for drip rates)
-- Extra pen lights
-- Drug reference card
-
-#### Pediatrics
-- Fun stickers
-- Small distraction toys
-- Character bandages
-
-#### Emergency Department
-- Trauma shears (heavier duty)
-- Extra hemostats
-- Quick reference cards
-
-#### Labor & Delivery
-- Fetal heart tone reference
-- Timing device for contractions
-
-### The Pre-Shift Check
-
-Before every shift, do a 60-second inventory:
-
-1. ✅ All pockets restocked?
-2. ✅ Pens working?
-3. ✅ Phone charged?
-4. ✅ Stethoscope holder attached?
-5. ✅ Badge visible?
-
-This quick check prevents the mid-shift scramble when you need something and can't find it.
-
----
-
-## Build Your Perfect Setup
-
-Download our printable checklist to customize for your unit and workflow. And if you're tired of juggling everything in tiny scrub pockets, check out our [nurse accessories](/shop?category=nurse-accessories) designed to keep you organized.
-
-*What's in YOUR pockets? Tag us on [Instagram](https://www.instagram.com/bobcatmedical) with your setup!*
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-10',
-      tags: ['Gear Guide', 'Nursing Life', 'Organization'],
-    },
-    'gift-ideas-for-nurses': {
-      _id: '8',
-      title: 'Gift Ideas for Nurses: What They Actually Want',
-      slug: 'gift-ideas-for-nurses',
-      excerpt: 'Skip the cheesy "Nurses are angels" mugs. Here are gifts nurses will actually use and appreciate.',
-      coverImage: '/images/hero/hero-medical.jpg',
-      content: `
-## Gifts Nurses Will Actually Use
-
-We love the thought behind "World's Best Nurse" mugs and angel-themed decor. Really, we do. But if you want to give a gift that a nurse will actually use and appreciate, read on.
-
-These recommendations come from real nurses who've received (and given) it all.
-
-### Tier 1: The Everyday Essentials
-
-These are gifts that improve a nurse's daily work life:
-
-#### Stethoscope Holder ($15-25)
-A proper stethoscope holder is a game-changer. Most nurses don't buy one for themselves, making it a perfect gift.
-
-- **[Magnetic holders](/shop/product/magnetic-stethoscope-holder)** are our top pick—strong, quick, and durable
-- **[Velcro holders](/shop/product/velcro-stethoscope-holder)** are great for those who prefer a traditional feel
-
-*Why they'll love it: No more neck pain from 12 hours of stethoscope-around-the-neck. Instant access when they need it.*
-
-#### Quality Compression Socks ($20-40)
-Not the boring beige medical ones—actual cute, colorful compression socks designed for long shifts. Brands like Comrad and Sockwell make great options.
-
-*Why they'll love it: Their legs will thank you after every shift.*
-
-#### Nurse Fanny Pack ($20-30)
-A well-designed [fanny pack](/shop/product/nurse-fanny-pack) holds all those essentials that don't fit in scrub pockets. Look for multiple compartments and easy-clean material.
-
-*Why they'll love it: Organization without the bulk.*
-
-### Tier 2: Self-Care & Recovery
-
-Nurses give care all day—help them recover:
-
-#### Massage Gift Card ($50-100+)
-A professional massage after a string of rough shifts is pure bliss. Book it for them if possible, since nurses often won't book it themselves.
-
-#### High-Quality Lotion or Hand Cream ($15-30)
-Constant hand washing and sanitizer destroys skin. Look for intensive repair creams like O'Keeffe's Working Hands, Eucerin, or Aquaphor.
-
-*Pro tip: Get a small tube for their pocket AND a larger tub for home.*
-
-#### Cozy Robe or Blanket ($30-60)
-After a long shift, nothing beats wrapping up in something soft. Barefoot Dreams makes amazing (if pricey) options. Target and Amazon have great budget alternatives.
-
-### Tier 3: Food & Drinks
-
-The way to a nurse's heart is through their stomach:
-
-#### Quality Coffee or Tea ($15-40)
-Nurses run on caffeine. A nice coffee subscription, fancy loose-leaf tea set, or bag of premium beans is always appreciated.
-
-#### Meal Delivery Gift Card ($50-100+)
-DoorDash, Uber Eats, or Grubhub gift cards for those nights when cooking is absolutely not happening.
-
-#### Snack Box Subscription ($20-50/month)
-Services like SnackCrate or Bokksu deliver interesting snacks monthly. Perfect for night shift survival.
-
-### Tier 4: Experiences
-
-Sometimes the best gift is time away from healthcare:
-
-#### Spa Day
-Massage, facial, the works. Book it on their day off.
-
-#### Nice Dinner Out
-Somewhere they'd never take themselves. Make the reservation.
-
-#### Weekend Getaway
-If budget allows, a night or two at a nice hotel can be the ultimate reset.
-
-### Gifts to Avoid
-
-With love, please skip these:
-
-❌ **"Nurses are angels" merchandise** - Sweet sentiment, but they have enough
-❌ **Cheap stethoscopes** - They already have one they trust
-❌ **Medical-themed jewelry** (unless you KNOW they want it)
-❌ **Scrubs** - They're picky about fit and fabric
-❌ **Anything that says "I'm a nurse, what's your superpower?"**
-❌ **Live plants** - They work 12-hour shifts; the plant will die
-
-### Budget-Friendly Ideas Under $20
-
-Great gifts don't have to be expensive:
-
-- Nice pens that actually work
-- Good quality chapstick/lip balm set
-- Fancy hand cream
-- Coffee shop gift card
-- Homemade baked goods (always a hit)
-- A heartfelt card expressing what they mean to you
-
-### The Best Gift of All
-
-Honestly? Sometimes the best gift is just understanding.
-
-- Don't be offended when they're too tired to hang out
-- Bring them food during a rough stretch of shifts
-- Listen when they need to vent
-- Tell them you're proud of them
-
----
-
-## Shopping for a Nurse?
-
-Browse our collection of [practical nursing accessories](/shop) that make thoughtful gifts. Everything we sell is designed with real nurses' needs in mind.
-
-*Have a nurse in your life? Share this list with whoever asks "What do you want for your birthday?"*
-      `,
-      author: 'Bobcat Medical Team',
-      publishedAt: '2025-12-05',
-      tags: ['Gift Guide', 'Nursing Life'],
-    },
-  };
-  post = placeholders[slug!];
+let post: any = null;
+try {
+  post = await getBlogPostBySlug(slug!);
+} catch (e) {
+  // API error
 }
 
 if (!post) {
   return Astro.redirect('/blog');
 }
 
-// Use hero image asset by index (optimized) so it matches the blog listing
-const postIndex = allPosts.length > 0
-  ? allPosts.findIndex((p: any) => p.slug === slug)
-  : BLOG_PLACEHOLDER_SLUGS_ORDER.indexOf(slug! as any);
-const coverAsset = BLOG_HERO_IMAGE_ASSETS[(postIndex >= 0 ? postIndex : 0) % BLOG_HERO_IMAGE_ASSETS.length];
-post = { ...post, coverImage: coverAsset };
-
-// Featured products for "Shop Featured Products" – use API images so they match the actual product photos
-const FEATURED_PRODUCT_SLUGS = ['magnetic-stethoscope-holder', 'velcro-stethoscope-holder', 'nurse-fanny-pack'] as const;
-const FALLBACK_IMAGES: Record<string, string> = {
-  'magnetic-stethoscope-holder': '/images/products/magnetic-holder-1.jpg',
-  'velcro-stethoscope-holder': '/images/products/stethoscope-holder-1.jpg',
-  'nurse-fanny-pack': '/images/products/nurse-fanny-pack-1.jpg',
-};
-const FEATURED_NAMES: Record<string, string> = {
-  'magnetic-stethoscope-holder': 'Magnetic Stethoscope Holder',
-  'velcro-stethoscope-holder': 'Velcro Stethoscope Holder',
-  'nurse-fanny-pack': 'Nurse Fanny Pack',
-};
-const FEATURED_PRICES: Record<string, string> = {
-  'magnetic-stethoscope-holder': '$18.99',
-  'velcro-stethoscope-holder': '$18.99',
-  'nurse-fanny-pack': '$22.99',
-};
-
-let featuredProducts: { slug: string; name: string; price: string; imageSrc: string }[] = [];
+// Related posts + CTA — fetch in parallel
+let relatedPosts: any[] = [];
+let cta: CtaData | null = null;
 try {
-  const products = await Promise.all(FEATURED_PRODUCT_SLUGS.map((s) => getProductBySlug(s)));
-  featuredProducts = FEATURED_PRODUCT_SLUGS.map((s, i) => {
-    const p = products[i];
-    const imageSrc = p?.images?.[0]?.src || FALLBACK_IMAGES[s];
-    return {
-      slug: s,
-      name: FEATURED_NAMES[s],
-      price: FEATURED_PRICES[s],
-      imageSrc,
-    };
-  });
+  const [related, ctaResult] = await Promise.all([
+    post.category ? getRelatedPosts(post.category, post.slug) : Promise.resolve([]),
+    getCtaBySlug(post.ctaType),
+  ]);
+  relatedPosts = related;
+  cta = ctaResult;
 } catch {
-  featuredProducts = FEATURED_PRODUCT_SLUGS.map((s) => ({
-    slug: s,
-    name: FEATURED_NAMES[s],
-    price: FEATURED_PRICES[s],
-    imageSrc: FALLBACK_IMAGES[s],
-  }));
+  // ignore
 }
 
+// Author helpers
+const authorName = typeof post.author === 'object'
+  ? post.author?.name || 'Bobcat Medical Team'
+  : post.author || 'Bobcat Medical Team';
+const authorInitial = authorName.charAt(0);
+const authorAvatar = typeof post.author === 'object' ? post.author?.avatar : null;
+
+// Date + read time
 const formattedDate = post.publishedAt
   ? new Date(post.publishedAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      year: 'numeric', month: 'long', day: 'numeric',
     })
   : null;
 
-// Parse markdown content
-const htmlContent = post.content ? await marked(post.content) : '';
+const wordCount = post.content
+  ? post.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/).filter(Boolean).length
+  : 0;
+const readTime = Math.max(1, Math.round(wordCount / 200));
+
+// --- TOC: parse headings from HTML ---
+interface TocHeading { id: string; text: string; level: number; }
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, ' ');
+}
+function parseHeadingsFromHtml(html: string): TocHeading[] {
+  const headings: TocHeading[] = [];
+  const regex = /<h([2-4])[^>]*>(.*?)<\/h\1>/gi;
+  let match;
+  const usedIds = new Set<string>();
+  while ((match = regex.exec(html)) !== null) {
+    const level = parseInt(match[1], 10);
+    const text = decodeHtmlEntities(match[2].replace(/<[^>]*>/g, '')).trim();
+    if (!text) continue;
+    let id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (usedIds.has(id)) { let i = 2; while (usedIds.has(`${id}-${i}`)) i++; id = `${id}-${i}`; }
+    usedIds.add(id);
+    headings.push({ id, text, level });
+  }
+  return headings;
+}
+function injectHeadingIds(html: string): string {
+  const usedIds = new Set<string>();
+  return html.replace(/<h([2-4])([^>]*)>(.*?)<\/h\1>/gi, (fullMatch, level, attrs, content) => {
+    const text = content.replace(/<[^>]*>/g, '').trim();
+    if (!text) return fullMatch;
+    let id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (usedIds.has(id)) { let i = 2; while (usedIds.has(`${id}-${i}`)) i++; id = `${id}-${i}`; }
+    usedIds.add(id);
+    const cleanAttrs = attrs.replace(/\s*id="[^"]*"/g, '');
+    return `<h${level}${cleanAttrs} id="${id}">${content}</h${level}>`;
+  });
+}
+
+// Content — HTML from LPAI API, fallback to markdown
+const isHtml = post.content && (post.content.includes('<p>') || post.content.includes('<h'));
+let rawHtml = '';
+if (isHtml) {
+  rawHtml = post.content;
+} else if (post.content) {
+  const { marked } = await import('marked');
+  rawHtml = await marked(post.content);
+}
+
+const headings = parseHeadingsFromHtml(rawHtml);
+const htmlContent = injectHeadingIds(rawHtml);
+const hasToc = headings.length >= 2;
+const minLevel = headings.length > 0 ? Math.min(...headings.map(h => h.level)) : 2;
+
+// SEO
+const seoTitle = post.seo?.metaTitle || post.title;
+const seoDesc = post.seo?.metaDescription || post.excerpt;
+const ogImage = post.seo?.ogImage || post.coverImage;
+const seoKeywords = post.seo?.keywords?.join(', ') || post.tags?.join(', ') || '';
+const postUrl = post.seo?.canonicalUrl || `https://bobcatmedical.com/blog/${post.slug}`;
+
+// Related post author helper
+const getRelAuthor = (a: any) => typeof a === 'object' ? a?.name || 'Bobcat Medical Team' : a || 'Bobcat Medical Team';
 ---
 
 <BaseLayout
-  title={post.title}
-  description={post.excerpt}
+  title={seoTitle}
+  description={seoDesc}
+  image={ogImage}
+  type="article"
+  noindex={post.seo?.noIndex}
+  keywords={seoKeywords || undefined}
+  canonicalUrl={postUrl}
   article={{
     publishedTime: post.publishedAt,
-    author: post.author,
+    author: authorName,
     tags: post.tags,
   }}
 >
-  <article>
-    <!-- Header -->
-    <header class="bg-bobcat-800 text-white py-16">
-      <div class="container-width max-w-4xl">
-        {post.tags && post.tags.length > 0 && (
-          <div class="flex flex-wrap gap-2 mb-4">
-            {post.tags.map((tag: string) => (
-              <span class="text-sm bg-bobcat-600 px-3 py-1 rounded-full">{tag}</span>
-            ))}
-          </div>
-        )}
-        <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-          {post.title}
-        </h1>
-        <p class="text-bobcat-100 text-lg mb-6">{post.excerpt}</p>
-        <div class="flex items-center gap-4 text-bobcat-200">
-          <span>{post.author}</span>
-          {formattedDate && (
-            <>
-              <span>•</span>
-              <time datetime={post.publishedAt}>{formattedDate}</time>
-            </>
-          )}
-        </div>
-      </div>
-    </header>
+  <!-- Reading Progress Bar -->
+  <div id="reading-progress" class="fixed top-0 left-0 right-0 z-50 h-[3px]">
+    <div id="reading-progress-bar" class="h-full bg-gradient-to-r from-bobcat-500 to-coral-500 transition-[width] duration-150 ease-out" style="width: 0%"></div>
+  </div>
 
-    <!-- Cover Image (optimized for quality) -->
-    {post.coverImage && (
-      <div class="container-width max-w-4xl mt-8">
-        <Image
-          src={post.coverImage}
-          alt={post.title}
-          width={896}
-          height={504}
-          quality={90}
-          class="w-full h-64 md:h-80 lg:h-96 object-cover object-top rounded-2xl shadow-xl"
-        />
+  <article>
+    <!-- Cover Image Hero -->
+    {post.coverImage && post.heroStyle !== 'gradient' ? (
+      <section class="relative h-[50vh] sm:h-[60vh] overflow-hidden">
+        <img src={post.coverImage} alt={post.title} class="absolute inset-0 w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-14">
+          <div class="max-w-4xl mx-auto">
+            <a href="/blog" class="inline-flex items-center text-white/70 hover:text-white mb-4 text-sm transition">
+              <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Blog
+            </a>
+            {post.category && (
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-3 py-1 bg-gradient-to-r from-bobcat-500 to-coral-500 text-white text-xs font-semibold rounded-full">
+                  {post.category}
+                </span>
+              </div>
+            )}
+            <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-snug">
+              {post.title}
+            </h1>
+            <div class="flex items-center gap-3 text-white/80 text-sm flex-wrap">
+              <div class="flex items-center gap-2">
+                {authorAvatar ? (
+                  <img src={authorAvatar} alt={authorName} class="w-8 h-8 rounded-full border-2 border-white/30" />
+                ) : (
+                  <div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                    <span class="text-white text-sm font-medium">{authorInitial}</span>
+                  </div>
+                )}
+                <span class="font-medium">{authorName}</span>
+              </div>
+              {formattedDate && (
+                <>
+                  <span class="text-white/40">|</span>
+                  <time datetime={post.publishedAt}>{formattedDate}</time>
+                </>
+              )}
+              <span class="text-white/40">|</span>
+              <span>{readTime} min read</span>
+              {post.viewCount > 0 && (
+                <>
+                  <span class="text-white/40">|</span>
+                  <span>{post.viewCount.toLocaleString()} views</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    ) : (
+      /* Gradient Hero Fallback */
+      <section class="relative py-20 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-bobcat-50 via-white to-bobcat-50/30 z-0">
+          <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-bobcat-100/50 blur-[100px]"></div>
+          <div class="absolute top-10 right-1/4 w-[400px] h-[400px] rounded-full bg-coral-100/40 blur-[100px]"></div>
+          <div class="absolute inset-0 opacity-[0.3]" style="background-image: radial-gradient(circle, rgba(13,143,143,0.07) 1px, transparent 1px); background-size: 24px 24px;"></div>
+        </div>
+        <div class="container-width relative z-10">
+          <div class="text-center max-w-4xl mx-auto">
+            <a href="/blog" class="inline-flex items-center text-bobcat-600 hover:text-bobcat-800 mb-6 transition">
+              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Blog
+            </a>
+            {post.category && (
+              <div class="flex items-center justify-center gap-2 mb-4">
+                <span class="px-3 py-1 bg-gradient-to-r from-bobcat-500 to-coral-500 text-white text-xs font-semibold rounded-full">
+                  {post.category}
+                </span>
+              </div>
+            )}
+            <h1 class="font-display text-3xl md:text-5xl font-bold mb-4 text-bobcat-800">
+              {post.title}
+            </h1>
+            <p class="text-lg text-warm-600 mb-6 max-w-2xl mx-auto">{post.excerpt}</p>
+            <div class="flex items-center justify-center gap-3 text-sm text-warm-500">
+              <div class="flex items-center gap-2">
+                {authorAvatar ? (
+                  <img src={authorAvatar} alt={authorName} class="w-8 h-8 rounded-full" />
+                ) : (
+                  <div class="w-8 h-8 rounded-full bg-bobcat-100 flex items-center justify-center">
+                    <span class="text-bobcat-600 font-medium">{authorInitial}</span>
+                  </div>
+                )}
+                <span class="font-medium">{authorName}</span>
+              </div>
+              {formattedDate && (
+                <>
+                  <span class="text-warm-300">|</span>
+                  <time>{formattedDate}</time>
+                </>
+              )}
+              <span class="text-warm-300">|</span>
+              <span>{readTime} min read</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Cover image below gradient hero -->
+    {post.coverImage && post.heroStyle === 'gradient' && (
+      <div class="container-width max-w-4xl -mt-8 mb-12 relative z-20">
+        <img src={post.coverImage} alt={post.title} class="w-full h-auto rounded-xl shadow-2xl" />
       </div>
     )}
 
-    <!-- Content -->
-    <div class="container-width max-w-4xl py-12">
-      <div class="prose prose-lg prose-warm max-w-none" set:html={htmlContent} />
-    </div>
+    <!-- Content + Sidebar -->
+    <div class="container-width py-12 sm:py-16 relative">
+      <!-- Ambient blobs -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="absolute top-40 right-0 w-[500px] h-[500px] rounded-full bg-bobcat-50/50 blur-[140px] translate-x-1/3"></div>
+        <div class="absolute bottom-60 left-0 w-[400px] h-[400px] rounded-full bg-coral-50/40 blur-[120px] -translate-x-1/4"></div>
+      </div>
 
-    <!-- Related Products CTA (uses API product images so they match the actual products) -->
-    <div class="container-width max-w-4xl pb-12">
-      <div class="bg-bobcat-50 rounded-2xl p-8">
-        <h2 class="font-display text-2xl font-bold text-warm-900 mb-4">Shop Featured Products</h2>
-        <p class="text-warm-600 mb-6">Gear designed by healthcare professionals, for healthcare professionals.</p>
-        <div class="grid sm:grid-cols-3 gap-4">
-          {featuredProducts.map((p) => (
-            <a href={`/shop/product/${p.slug}`} class="bg-white rounded-xl p-4 hover:shadow-md transition-shadow group">
-              <img src={p.imageSrc} alt={p.name} class="aspect-square object-cover rounded-lg mb-3" loading="lazy" decoding="async" />
-              <h3 class="font-semibold text-warm-900 group-hover:text-bobcat-600 transition-colors">{p.name}</h3>
-              <p class="text-bobcat-600 font-bold">{p.price}</p>
-            </a>
-          ))}
+      <!-- Mobile TOC -->
+      {hasToc && (
+        <div class="xl:hidden max-w-3xl mx-auto mb-8">
+          <nav class="blog-toc bg-white border border-warm-200 shadow-sm rounded-xl p-4">
+            <button id="toc-mobile-toggle" class="flex items-center justify-between w-full px-3 py-2.5 bg-warm-50 rounded-lg text-sm font-medium text-warm-700 hover:bg-warm-100 transition">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                Table of Contents
+              </span>
+              <svg id="toc-chevron" class="w-4 h-4 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div id="toc-mobile-list" class="hidden mt-2">
+              <ul class="space-y-0.5">
+                {headings.map((h) => (
+                  <li>
+                    <button
+                      data-toc-id={h.id}
+                      class={`toc-link block w-full text-left text-sm py-1.5 rounded-md transition-all duration-150 text-warm-500 hover:text-warm-900 hover:bg-warm-50 border-l-2 border-transparent ${
+                        h.level - minLevel === 0 ? 'pl-3' : h.level - minLevel === 1 ? 'pl-6' : 'pl-9'
+                      }`}
+                    >
+                      {h.text}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
         </div>
-        <div class="text-center mt-6">
-          <a href="/shop" class="btn-primary">View All Products</a>
+      )}
+
+      <div class={`max-w-6xl mx-auto relative z-10 ${hasToc ? 'grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-12' : 'max-w-4xl'}`}>
+        <!-- Main Content -->
+        <div class="min-w-0">
+          <div
+            class="prose prose-lg prose-warm max-w-none
+              prose-headings:text-warm-900 prose-headings:font-bold prose-headings:tracking-tight
+              prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b prose-h2:border-warm-200
+              prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-3
+              prose-h4:text-xl prose-h4:mt-8 prose-h4:mb-2
+              prose-p:text-warm-600 prose-p:leading-[1.85] prose-p:text-[17px]
+              prose-a:text-bobcat-600 prose-a:decoration-bobcat-300 prose-a:underline-offset-2 hover:prose-a:text-bobcat-800
+              prose-strong:text-warm-900 prose-strong:font-semibold
+              prose-img:rounded-2xl prose-img:shadow-xl prose-img:ring-1 prose-img:ring-black/5 prose-img:my-10
+              [&_img[style*=width]]:!max-w-none [&_img[style*=float]]:!my-0
+              [&_.blog-img-left]:float-left [&_.blog-img-left]:mr-6 [&_.blog-img-left]:mb-4 [&_.blog-img-left]:!my-0
+              [&_.blog-img-right]:float-right [&_.blog-img-right]:ml-6 [&_.blog-img-right]:mb-4 [&_.blog-img-right]:!my-0
+              [&_.blog-img-center]:!mx-auto [&_.blog-img-center]:!block
+              prose-blockquote:border-bobcat-400 prose-blockquote:bg-bobcat-50/50 prose-blockquote:rounded-r-xl prose-blockquote:py-1 prose-blockquote:pr-4
+              prose-blockquote:text-warm-500 prose-blockquote:font-normal prose-blockquote:not-italic
+              prose-code:text-bobcat-700 prose-code:bg-bobcat-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal
+              prose-pre:bg-gray-900 prose-pre:text-green-400 prose-pre:rounded-2xl prose-pre:shadow-lg prose-pre:border prose-pre:border-gray-800
+              prose-li:text-warm-600 prose-li:leading-relaxed prose-li:marker:text-bobcat-400
+              prose-hr:border-0 prose-hr:h-px prose-hr:bg-gradient-to-r prose-hr:from-transparent prose-hr:via-warm-300 prose-hr:to-transparent prose-hr:my-12
+              [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-2xl [&_iframe]:shadow-lg [&_iframe]:my-10"
+            set:html={htmlContent}
+          />
+
+          <!-- Tags -->
+          {post.tags && post.tags.length > 0 && (
+            <div class="mt-12 pt-8 border-t border-warm-200">
+              <h3 class="text-sm font-medium text-warm-500 mb-4">Tags</h3>
+              <div class="flex flex-wrap gap-2">
+                {post.tags.map((tag: string) => (
+                  <a
+                    href={`/blog?q=${encodeURIComponent(tag)}`}
+                    class="px-3 py-1 bg-bobcat-50 text-bobcat-700 text-sm font-medium rounded-full border border-bobcat-200 hover:bg-bobcat-100 hover:border-bobcat-300 transition"
+                  >
+                    #{tag}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Author Bio -->
+          <div class="mt-8 pt-8 border-t border-warm-200">
+            <div class="bg-white border border-warm-200 shadow-sm rounded-xl p-6 flex items-start gap-4">
+              {authorAvatar ? (
+                <img src={authorAvatar} alt={authorName} class="w-14 h-14 rounded-full flex-shrink-0" />
+              ) : (
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-bobcat-100 to-coral-100 flex items-center justify-center flex-shrink-0">
+                  <span class="text-bobcat-600 text-xl font-bold">{authorInitial}</span>
+                </div>
+              )}
+              <div>
+                <p class="text-xs text-warm-400 uppercase tracking-wider mb-1">Written by</p>
+                <p class="text-lg font-semibold text-warm-900">{authorName}</p>
+                <p class="text-sm text-warm-500 mt-1">
+                  Delivering quality medical equipment and healthcare insights for nurses and healthcare professionals.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Right Sidebar — TOC + Share (desktop only) -->
+        {hasToc && (
+          <aside class="hidden xl:block self-start sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div class="space-y-6">
+              <!-- Desktop TOC -->
+              <nav class="blog-toc bg-white border border-warm-200 shadow-sm rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3 text-xs font-semibold uppercase tracking-wider text-warm-400">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                  On this page
+                </div>
+                <ul class="space-y-0.5">
+                  {headings.map((h) => (
+                    <li>
+                      <button
+                        data-toc-id={h.id}
+                        class={`toc-link block w-full text-left text-sm py-1.5 rounded-md transition-all duration-150 text-warm-500 hover:text-warm-900 hover:bg-warm-50 border-l-2 border-transparent ${
+                          h.level - minLevel === 0 ? 'pl-3' : h.level - minLevel === 1 ? 'pl-6' : 'pl-9'
+                        }`}
+                      >
+                        {h.text}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <!-- Share Buttons -->
+              <div class="bg-white border border-warm-200 shadow-sm rounded-xl p-4 border-t-2 border-t-bobcat-200">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-warm-400 mb-3">Share</h4>
+                <div class="flex flex-col gap-2">
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(postUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-warm-50 transition text-sm text-warm-600 hover:text-warm-900"
+                  >
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                    Twitter / X
+                  </a>
+                  <a
+                    href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(post.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-warm-50 transition text-sm text-warm-600 hover:text-warm-900"
+                  >
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                    LinkedIn
+                  </a>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-warm-50 transition text-sm text-warm-600 hover:text-warm-900"
+                  >
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                    Facebook
+                  </a>
+                </div>
+              </div>
+            </div>
+          </aside>
+        )}
       </div>
     </div>
 
+    <!-- Related Posts -->
+    {relatedPosts.length > 0 && (
+      <section class="py-16 bg-warm-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-bobcat-50/50 blur-[130px] -translate-x-1/3 -translate-y-1/4 pointer-events-none"></div>
+        <div class="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-coral-50/40 blur-[120px] translate-x-1/4 translate-y-1/4 pointer-events-none"></div>
+        <div class="container-width max-w-6xl relative z-10">
+          <h2 class="font-display text-2xl font-bold text-warm-900 mb-8 text-center">Related Articles</h2>
+          <div class={`grid gap-6 ${relatedPosts.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : relatedPosts.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+            {relatedPosts.map((related) => (
+              <BlogCard
+                title={related.title}
+                slug={related.slug}
+                excerpt={related.excerpt}
+                coverImage={related.coverImage}
+                author={getRelAuthor(related.author)}
+                publishedAt={related.publishedAt}
+                tags={related.tags}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- CTA Section (dynamic, from API) -->
+    {cta && (
+      <section class={`py-20 relative overflow-hidden ${cta.gradient || 'bg-gradient-to-r from-bobcat-700 via-bobcat-800 to-bobcat-700'}`}>
+        <div class="absolute inset-0">
+          <div class="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/5 animate-pulse"></div>
+          <div class="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/5 animate-pulse" style="animation-delay: 1.5s;"></div>
+        </div>
+        <div class="container-width text-center relative z-10">
+          <h2 class="font-display text-3xl font-bold text-white mb-4">
+            {cta.heading}
+          </h2>
+          <p class="text-white/80 mb-8 max-w-2xl mx-auto">
+            {cta.description}
+          </p>
+          <a
+            href={cta.href}
+            class="inline-flex items-center px-8 py-4 bg-coral-500 text-white font-semibold rounded-lg hover:bg-coral-600 transition shadow-lg"
+          >
+            {cta.buttonText}
+            <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </section>
+    )}
+
     <!-- Back to Blog -->
-    <div class="container-width max-w-4xl pb-16">
-      <a href="/blog" class="btn-secondary">
+    <div class="container-width max-w-4xl py-12">
+      <a href="/blog" class="inline-flex items-center gap-2 px-5 py-2.5 border border-warm-300 text-warm-700 rounded-lg hover:bg-warm-100 transition font-medium text-sm">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -1026,4 +473,112 @@ const htmlContent = post.content ? await marked(post.content) : '';
       </a>
     </div>
   </article>
+
+  <!-- Back to Top Button -->
+  <button
+    id="back-to-top"
+    class="fixed bottom-8 right-8 z-40 w-12 h-12 rounded-full bg-gradient-to-r from-bobcat-500 to-coral-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110 opacity-0 pointer-events-none"
+    aria-label="Back to top"
+  >
+    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+    </svg>
+  </button>
 </BaseLayout>
+
+<script>
+  // --- Reading Progress Bar ---
+  const progressBar = document.getElementById('reading-progress-bar');
+  function updateProgress() {
+    if (!progressBar) return;
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (docHeight <= 0) return;
+    const pct = Math.min(100, (scrollTop / docHeight) * 100);
+    progressBar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  // --- Back to Top ---
+  const backToTop = document.getElementById('back-to-top');
+  function updateBackToTop() {
+    if (!backToTop) return;
+    if (window.scrollY > 400) {
+      backToTop.classList.remove('opacity-0', 'pointer-events-none');
+      backToTop.classList.add('opacity-100');
+    } else {
+      backToTop.classList.add('opacity-0', 'pointer-events-none');
+      backToTop.classList.remove('opacity-100');
+    }
+  }
+  window.addEventListener('scroll', updateBackToTop, { passive: true });
+  backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // --- Mobile TOC Toggle ---
+  const tocToggle = document.getElementById('toc-mobile-toggle');
+  const tocList = document.getElementById('toc-mobile-list');
+  const tocChevron = document.getElementById('toc-chevron');
+  tocToggle?.addEventListener('click', () => {
+    tocList?.classList.toggle('hidden');
+    tocChevron?.classList.toggle('rotate-180');
+  });
+
+  // --- TOC Active Heading Tracking ---
+  const tocLinks = document.querySelectorAll<HTMLButtonElement>('.toc-link[data-toc-id]');
+  const SCROLL_OFFSET = 80;
+
+  // Click handler — smooth scroll to heading
+  tocLinks.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tocId;
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const y = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      // Close mobile TOC
+      tocList?.classList.add('hidden');
+      tocChevron?.classList.remove('rotate-180');
+    });
+  });
+
+  // IntersectionObserver for active heading
+  function setupObserver() {
+    const headingIds = Array.from(tocLinks).map(btn => btn.dataset.tocId).filter(Boolean) as string[];
+    const headingEls = headingIds.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    if (headingEls.length === 0) return;
+
+    const elementToId = new Map<Element, string>();
+    headingEls.forEach((el, i) => elementToId.set(el, headingIds[i]));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting);
+        if (visible.length > 0) {
+          const activeId = elementToId.get(visible[0].target);
+          if (activeId) setActiveToc(activeId);
+        }
+      },
+      { rootMargin: `-${SCROLL_OFFSET}px 0px -60% 0px`, threshold: 0 }
+    );
+    headingEls.forEach(el => observer.observe(el));
+  }
+
+  function setActiveToc(activeId: string) {
+    tocLinks.forEach(btn => {
+      const isActive = btn.dataset.tocId === activeId;
+      if (isActive) {
+        btn.classList.add('text-bobcat-700', 'font-medium', 'bg-bobcat-50/80');
+        btn.classList.remove('text-warm-500', 'border-transparent');
+        btn.style.borderLeftColor = '#0d8f8f';
+      } else {
+        btn.classList.remove('text-bobcat-700', 'font-medium', 'bg-bobcat-50/80');
+        btn.classList.add('text-warm-500', 'border-transparent');
+        btn.style.borderLeftColor = '';
+      }
+    });
+  }
+
+  // Give DOM a moment to hydrate heading IDs
+  setTimeout(setupObserver, 100);
+</script>
