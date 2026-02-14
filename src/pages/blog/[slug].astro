@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import BlogCard from '@components/BlogCard.astro';
-import { getBlogPostBySlug, getRelatedPosts, getCtaBySlug } from '@lib/api';
+import { getBlogPostBySlug, getRelatedPosts, getCtaForPost } from '@lib/api';
 import type { CtaData } from '@lib/api';
 
 const { slug } = Astro.params;
@@ -23,7 +23,7 @@ let cta: CtaData | null = null;
 try {
   const [related, ctaResult] = await Promise.all([
     post.category ? getRelatedPosts(post.category, post.slug) : Promise.resolve([]),
-    getCtaBySlug(post.ctaType),
+    getCtaForPost(post.ctaType, post.slug),
   ]);
   relatedPosts = related;
   cta = ctaResult;

@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { estimateReadTime } from '@lib/api';
 
 interface Props {
   title: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const { title, slug, excerpt, coverImage, author, publishedAt, tags } = Astro.props;
+const readTime = estimateReadTime(undefined, excerpt);
 
 const isAsset = coverImage && typeof coverImage === 'object' && 'src' in coverImage;
 
@@ -74,7 +76,15 @@ const formattedDate = publishedAt
     <p class="text-warm-600 text-sm mb-4 line-clamp-2">{excerpt}</p>
     <div class="flex items-center justify-between text-sm text-warm-500">
       <span class="font-medium">{author}</span>
-      {formattedDate && <span>{formattedDate}</span>}
+      <div class="flex items-center gap-2 text-xs text-warm-400">
+        {formattedDate && <span>{formattedDate}</span>}
+        {readTime && (
+          <>
+            <span>&middot;</span>
+            <span>{readTime}</span>
+          </>
+        )}
+      </div>
     </div>
   </div>
 </article>

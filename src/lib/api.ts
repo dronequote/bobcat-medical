@@ -208,6 +208,22 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   return [];
 }
 
+/** Estimate read time. On listings (no content), uses excerpt × 50 ratio. */
+export function estimateReadTime(content?: string, excerpt?: string): string {
+  if (content) {
+    const words = content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    return `${minutes} min read`;
+  }
+  if (excerpt) {
+    const excerptWords = excerpt.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+    const estimatedWords = excerptWords * 50;
+    const minutes = Math.max(3, Math.round(estimatedWords / 200));
+    return `${minutes} min read`;
+  }
+  return '5 min read';
+}
+
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   const response = await fetch(`${API_BASE}/blog/posts/${encodeURIComponent(slug)}?locationId=${BOBCAT_LOCATION_ID}`);
   const data = await response.json();
@@ -230,6 +246,26 @@ export async function getCtaBySlug(ctaSlug?: string): Promise<CtaData | null> {
     const data = await response.json();
     if (!data.success) return null;
     return data.data.find((c: any) => c.slug === ctaSlug) || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Pick CTA for a post — uses post's ctaType if set, otherwise randomizes from all CTAs (seeded by slug). */
+export async function getCtaForPost(ctaType?: string, postSlug?: string): Promise<CtaData | null> {
+  try {
+    const response = await fetch(`${API_BASE}/blog/ctas?locationId=${BOBCAT_LOCATION_ID}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.success) return null;
+    const allCtas: CtaData[] = data.data || [];
+    if (!allCtas.length) return null;
+    if (ctaType && ctaType !== 'none') {
+      const match = allCtas.find((c: any) => c.slug === ctaType);
+      if (match) return match;
+    }
+    const hash = (postSlug || '').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+    return allCtas[hash % allCtas.length];
   } catch {
     return null;
   }
