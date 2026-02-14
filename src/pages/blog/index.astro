@@ -1,12 +1,26 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import BlogCard from '@components/BlogCard.astro';
-import { getBlogPosts } from '@lib/api';
+import { getBlogPosts, getBlogCategories } from '@lib/api';
+
+// Read search params (SSR)
+const url = Astro.url;
+const q = url.searchParams.get('q') || '';
+const categoryFilter = url.searchParams.get('category') || '';
+const hasFilters = !!q || !!categoryFilter;
 
 let posts: any[] = [];
+let total = 0;
+let categories: any[] = [];
 
 try {
-  posts = await getBlogPosts();
+  const [postsResult, cats] = await Promise.all([
+    getBlogPosts({ q: q || undefined, category: categoryFilter || undefined }),
+    getBlogCategories(),
+  ]);
+  posts = postsResult.posts;
+  total = postsResult.total;
+  categories = cats;
 } catch (e) {
   // API error — show empty state
 }
@@ -14,9 +28,12 @@ try {
 // Only show published posts
 const publishedPosts = posts.filter(p => p.published !== false);
 
-// Featured: prefer explicitly featured post, fall back to first
-const featuredPost = publishedPosts.find(p => p.featured) || (publishedPosts.length > 0 ? publishedPosts[0] : null);
-const gridPosts = featuredPost ? publishedPosts.filter(p => p._id !== featuredPost._id) : [];
+// Featured: prefer explicitly featured post, fall back to first (only when no filters)
+const showFeatured = !hasFilters && publishedPosts.length > 0;
+const featuredPost = showFeatured
+  ? publishedPosts.find(p => p.featured) || publishedPosts[0]
+  : null;
+const gridPosts = featuredPost ? publishedPosts.filter(p => p._id !== featuredPost._id) : publishedPosts;
 
 const getAuthorName = (author: any) =>
   typeof author === 'object' ? author?.name || 'Bobcat Medical Team' : author || 'Bobcat Medical Team';
@@ -25,6 +42,14 @@ const formatDate = (date?: string) =>
   date
     ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
+
+function buildHref(params: { category?: string; q?: string }) {
+  const qs = new URLSearchParams();
+  if (params.category) qs.set('category', params.category);
+  if (params.q) qs.set('q', params.q);
+  const str = qs.toString();
+  return str ? `/blog?${str}` : '/blog';
+}
 ---
 
 <BaseLayout
@@ -56,7 +81,6 @@ const formatDate = (date?: string) =>
       {featuredPost && (
         <a href={`/blog/${featuredPost.slug}`} class="group block max-w-5xl mx-auto">
           <article class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-5 hover:bg-white/15 transition-all duration-300">
-            <!-- Image — 3 of 5 cols -->
             <div class="relative h-56 lg:h-[28rem] lg:col-span-3 overflow-hidden">
               {featuredPost.coverImage ? (
                 <img
@@ -74,7 +98,6 @@ const formatDate = (date?: string) =>
               <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent lg:hidden"></div>
             </div>
 
-            <!-- Content — 2 of 5 cols -->
             <div class="p-6 lg:p-8 lg:col-span-2 flex flex-col justify-center">
               <div class="flex items-center gap-2 mb-3">
                 <span class="px-3 py-1 bg-coral-500 text-white text-xs font-bold uppercase tracking-wide rounded-full">
@@ -103,9 +126,98 @@ const formatDate = (date?: string) =>
     </div>
   </section>
 
+  <!-- Search + Category Filters — Sticky bar -->
+  <section class="py-5 bg-white/95 backdrop-blur-md sticky top-0 z-20 border-b border-warm-200/60 shadow-sm">
+    <div class="container-width max-w-6xl">
+      <!-- Search Bar -->
+      <form method="GET" action="/blog" class="relative max-w-md mx-auto mb-4">
+        {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
+        <input
+          type="text"
+          name="q"
+          value={q}
+          placeholder="Search articles..."
+          class="w-full pl-10 pr-10 py-2.5 border border-warm-200 rounded-full text-sm outline-none ring-0 focus:ring-2 focus:ring-bobcat-500 focus:border-transparent bg-white/80 backdrop-blur-sm placeholder-warm-400 transition-shadow"
+        />
+        <svg
+          class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-400 pointer-events-none"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        {q && (
+          <a
+            href={categoryFilter ? `/blog?category=${categoryFilter}` : '/blog'}
+            class="absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-400 hover:text-warm-600"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </a>
+        )}
+      </form>
+
+      <!-- Category Filter Pills -->
+      {categories.length > 0 && (
+        <div class="flex flex-wrap justify-center gap-2">
+          <a
+            href={q ? `/blog?q=${encodeURIComponent(q)}` : '/blog'}
+            class:list={[
+              'px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
+              !categoryFilter
+                ? 'bg-gradient-to-r from-bobcat-600 to-coral-500 text-white shadow-sm'
+                : 'bg-warm-100 text-warm-600 border border-warm-200 hover:bg-warm-200',
+            ]}
+          >
+            All Topics
+          </a>
+          {categories.filter((c: any) => (c.postCount ?? 0) > 0).map((cat: any) => (
+            <a
+              href={buildHref({ category: cat.slug, q: q || undefined })}
+              class:list={[
+                'px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
+                categoryFilter === cat.slug
+                  ? 'bg-gradient-to-r from-bobcat-600 to-coral-500 text-white shadow-sm'
+                  : 'bg-warm-100 text-warm-600 border border-warm-200 hover:bg-warm-200',
+              ]}
+            >
+              {cat.name} ({cat.postCount})
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Active Filters Banner -->
+  {hasFilters && (
+    <div class="bg-bobcat-50/60 py-3">
+      <div class="container-width flex items-center justify-center gap-2 text-sm">
+        <span class="text-warm-500">Showing:</span>
+        {categoryFilter && (
+          <span class="px-2 py-0.5 bg-bobcat-100 text-bobcat-700 rounded text-xs font-medium">
+            {categories.find((c: any) => c.slug === categoryFilter)?.name || categoryFilter}
+          </span>
+        )}
+        {q && (
+          <span class="px-2 py-0.5 bg-warm-200 text-warm-700 rounded text-xs font-medium">
+            &ldquo;{q}&rdquo;
+          </span>
+        )}
+        <a href="/blog" class="text-bobcat-600 hover:underline text-xs ml-2">
+          Clear filters
+        </a>
+      </div>
+    </div>
+  )}
+
   <!-- Blog Grid -->
   <section class="pt-10 pb-16 bg-warm-100 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-bobcat-800 to-transparent pointer-events-none z-10"></div>
+    {!hasFilters && (
+      <div class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-bobcat-800 to-transparent pointer-events-none z-10"></div>
+    )}
     <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-bobcat-100/40 blur-[150px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
     <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-coral-100/30 blur-[130px] translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
 
@@ -129,8 +241,17 @@ const formatDate = (date?: string) =>
           <svg class="w-16 h-16 text-warm-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
-          <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No posts yet</h2>
-          <p class="text-warm-500">Check back soon for nursing stories and tips!</p>
+          {q ? (
+            <>
+              <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No posts found for &ldquo;{q}&rdquo;</h2>
+              <a href="/blog" class="text-bobcat-600 hover:underline">Clear search</a>
+            </>
+          ) : (
+            <>
+              <h2 class="font-display text-xl font-bold text-warm-700 mb-2">No posts yet</h2>
+              <p class="text-warm-500">Check back soon for nursing stories and tips!</p>
+            </>
+          )}
         </div>
       ) : null}
     </div>

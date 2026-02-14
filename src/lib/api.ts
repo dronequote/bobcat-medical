@@ -196,16 +196,49 @@ export interface BlogPost {
   };
 }
 
-export async function getBlogPosts(): Promise<BlogPost[]> {
-  const response = await fetch(`${API_BASE}/blog/posts?locationId=${BOBCAT_LOCATION_ID}&limit=100`);
+export interface BlogCategoryInfo {
+  _id: string;
+  name: string;
+  slug: string;
+  postCount?: number;
+}
+
+export async function getBlogPosts(opts?: {
+  category?: string;
+  q?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ posts: BlogPost[]; total: number }> {
+  const params = new URLSearchParams({
+    locationId: BOBCAT_LOCATION_ID,
+    limit: String(opts?.limit || 100),
+  });
+  if (opts?.page) params.set('page', String(opts.page));
+  if (opts?.category) params.set('category', opts.category);
+  if (opts?.q) params.set('q', opts.q);
+  const response = await fetch(`${API_BASE}/blog/posts?${params}`);
   const data = await response.json();
   if (data.success && data.data?.posts) {
-    return data.data.posts.map((p: any) => ({
-      ...p,
-      author: typeof p.author === 'object' ? p.author.name : (p.author || 'Bobcat Medical Team'),
-    }));
+    return {
+      posts: data.data.posts.map((p: any) => ({
+        ...p,
+        author: typeof p.author === 'object' ? p.author.name : (p.author || 'Bobcat Medical Team'),
+      })),
+      total: data.data.pagination?.total || data.data.posts.length,
+    };
   }
-  return [];
+  return { posts: [], total: 0 };
+}
+
+export async function getBlogCategories(): Promise<BlogCategoryInfo[]> {
+  try {
+    const response = await fetch(`${API_BASE}/blog/categories?locationId=${BOBCAT_LOCATION_ID}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.success ? data.data || [] : [];
+  } catch {
+    return [];
+  }
 }
 
 /** Estimate read time. On listings (no content), uses excerpt × 50 ratio. */
