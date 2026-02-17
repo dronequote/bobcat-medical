@@ -111,6 +111,25 @@
           </div>
         </div>
 
+        <div class="border-t border-warm-200 pt-4">
+          <label for="checkout-coupon" class="label">
+            Coupon code (optional)
+          </label>
+          <div class="flex gap-2 mt-1">
+            <input
+              type="text"
+              id="checkout-coupon"
+              placeholder="Enter code"
+              class="input-field flex-1"
+              autocomplete="off"
+            />
+            <button id="checkout-apply-coupon" type="button" class="btn-secondary whitespace-nowrap">
+              Apply
+            </button>
+          </div>
+          <div id="checkout-coupon-message" class="mt-1.5 min-h-[1.25rem] text-sm"></div>
+        </div>
+
         <div>
           <label for="checkout-email" class="label">
             Email Address <span class="text-red-500">*</span>
@@ -180,7 +199,7 @@
 
 <script>
   import { getCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartItemCount } from '@lib/cart';
-  import { createCheckout } from '@lib/api';
+  import { createCheckout, validateCoupon } from '@lib/api';
   import type { Cart, CartItem } from '@lib/cart';
 
   // Fallback: storefront slug → GHL product ID (for checkout when item.ghlProductId missing, e.g. old cart)
@@ -217,6 +236,11 @@
   const checkoutPay = document.getElementById('checkout-pay');
   const checkoutPaymentIframe = document.getElementById('checkout-payment-iframe') as HTMLIFrameElement;
   const checkoutClosePayment = document.getElementById('checkout-close-payment');
+  const checkoutCouponInput = document.getElementById('checkout-coupon') as HTMLInputElement | null;
+  const checkoutApplyCoupon = document.getElementById('checkout-apply-coupon');
+  const checkoutCouponMessage = document.getElementById('checkout-coupon-message');
+
+  let appliedCouponCode: string | null = null;
 
   function renderCartItem(item: CartItem): string {
     const priceIdAttr = item.ghlPriceId ? `data-ghl-price-id="${item.ghlPriceId}"` : '';
@@ -336,11 +360,34 @@
     document.body.style.overflow = '';
   }
 
+  function setCouponMessage(msg: string, isError: boolean, showRemove = false) {
+    if (!checkoutCouponMessage) return;
+    checkoutCouponMessage.className = `mt-1.5 min-h-[1.25rem] text-sm ${isError ? 'text-red-600' : 'text-bobcat-600'}`;
+    if (showRemove && appliedCouponCode) {
+      checkoutCouponMessage.innerHTML = `${appliedCouponCode} applied. <button type="button" id="checkout-remove-coupon" class="underline font-medium hover:no-underline">Remove</button>`;
+      document.getElementById('checkout-remove-coupon')?.addEventListener('click', () => {
+        clearCouponState();
+      });
+    } else {
+      checkoutCouponMessage.textContent = msg;
+    }
+  }
+
+  function clearCouponState() {
+    appliedCouponCode = null;
+    if (checkoutCouponInput) checkoutCouponInput.value = '';
+    if (checkoutCouponMessage) {
+      checkoutCouponMessage.textContent = '';
+      checkoutCouponMessage.className = 'mt-1.5 min-h-[1.25rem] text-sm';
+    }
+  }
+
   function openCheckout() {
     const cart = getCart();
     if (cart.items.length === 0) return;
 
     closeCart();
+    clearCouponState();
 
     if (checkoutSummary) {
       checkoutSummary.innerHTML = cart.items.map(item => {
@@ -415,6 +462,7 @@
         items,
         customerEmail: email,
         customerName: name || undefined,
+        couponCode: appliedCouponCode || undefined,
       });
 
       if (checkoutPaymentIframe && result.paymentUrl) {
@@ -440,6 +488,29 @@
   cartButton?.addEventListener('click', openCart);
   cartClose?.addEventListener('click', closeCart);
   cartOverlay?.addEventListener('click', closeCart);
+  checkoutApplyCoupon?.addEventListener('click', async () => {
+    const code = checkoutCouponInput?.value?.trim();
+    if (!code) {
+      setCouponMessage('Enter a coupon code.', true);
+      return;
+    }
+    setCouponMessage('Checking...', false);
+    try {
+      const result = await validateCoupon(code);
+      if (result.valid) {
+        appliedCouponCode = code.toUpperCase();
+        setCouponMessage('', false, true);
+        if (checkoutCouponInput) checkoutCouponInput.value = appliedCouponCode;
+      } else {
+        appliedCouponCode = null;
+        setCouponMessage(result.error, true);
+      }
+    } catch {
+      appliedCouponCode = null;
+      setCouponMessage('Could not validate coupon. Try again or continue without.', true);
+    }
+  });
+
   checkoutBtn?.addEventListener('click', openCheckout);
   checkoutBack?.addEventListener('click', () => {
     closeCheckout();

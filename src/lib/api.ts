@@ -499,6 +499,27 @@ export async function deleteStaff(id: string): Promise<void> {
   }
 }
 
+// ==================== COUPON VALIDATION ====================
+
+/** Validates a coupon via the site's API route (GHL). Use before checkout for immediate feedback. */
+export async function validateCoupon(
+  couponCode: string
+): Promise<
+  | { valid: true; couponId: string; coupon?: unknown }
+  | { valid: false; error: string }
+> {
+  const response = await fetch('/api/validate-coupon', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ couponCode: couponCode.trim() }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (data.valid && data.couponId) {
+    return { valid: true, couponId: data.couponId, coupon: data.coupon };
+  }
+  return { valid: false, error: data.error || 'Invalid or expired coupon code.' };
+}
+
 // ==================== CHECKOUT ====================
 
 export async function createCheckout(data: {
