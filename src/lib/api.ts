@@ -543,7 +543,12 @@ export async function createCheckout(data: {
   const result = await response.json();
   if (!response.ok) {
     const msg = result.message || result.error;
-    if (response.status === 422 && (!msg || /unprocessable|422/i.test(String(msg)))) {
+    const msgStr = String(msg || '').toLowerCase();
+    const looksLikeCouponError =
+      response.status === 422 ||
+      /unprocessable|422|coupon could not be applied/i.test(msgStr) ||
+      msgStr.includes('unprocessable entity');
+    if (looksLikeCouponError) {
       throw new Error('The coupon code could not be applied. It may be invalid, expired, or not applicable to this order. Try removing it or use a different code.');
     }
     throw new Error(typeof msg === 'string' ? msg : 'Checkout failed');

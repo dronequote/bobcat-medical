@@ -457,12 +457,13 @@
       };
     });
 
+    const couponToSend = (appliedCouponCode || checkoutCouponInput?.value?.trim() || '').trim() || undefined;
     try {
       const result = await createCheckout({
         items,
         customerEmail: email,
         customerName: name || undefined,
-        couponCode: appliedCouponCode || undefined,
+        couponCode: couponToSend,
       });
 
       if (checkoutPaymentIframe && result.paymentUrl) {
