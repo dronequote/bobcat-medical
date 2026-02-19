@@ -104,8 +104,16 @@
           <!-- Order summary rendered by JS -->
         </div>
 
-        <div class="border-t border-warm-200 pt-4">
-          <div class="flex justify-between items-center mb-4">
+        <div class="border-t border-warm-200 pt-4 space-y-2">
+          <div class="flex justify-between items-center text-warm-700">
+            <span class="font-medium">Subtotal:</span>
+            <span id="checkout-subtotal" class="font-semibold">$0</span>
+          </div>
+          <div id="checkout-discount-row" class="flex justify-between items-center text-bobcat-600 hidden">
+            <span class="font-medium" id="checkout-discount-label">Discount:</span>
+            <span id="checkout-discount-amount" class="font-semibold">-$0</span>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-warm-200">
             <span class="font-semibold text-warm-700">Total:</span>
             <span id="checkout-total" class="font-display text-2xl font-bold text-bobcat-600">$0</span>
           </div>
@@ -239,8 +247,14 @@
   const checkoutCouponInput = document.getElementById('checkout-coupon') as HTMLInputElement | null;
   const checkoutApplyCoupon = document.getElementById('checkout-apply-coupon');
   const checkoutCouponMessage = document.getElementById('checkout-coupon-message');
+  const checkoutSubtotalEl = document.getElementById('checkout-subtotal');
+  const checkoutDiscountRow = document.getElementById('checkout-discount-row');
+  const checkoutDiscountLabel = document.getElementById('checkout-discount-label');
+  const checkoutDiscountAmount = document.getElementById('checkout-discount-amount');
 
   let appliedCouponCode: string | null = null;
+  let appliedDiscount = 0;
+  let appliedNewTotal: number | null = null;
 
   function renderCartItem(item: CartItem): string {
     const priceIdAttr = item.ghlPriceId ? `data-ghl-price-id="${item.ghlPriceId}"` : '';
@@ -375,10 +389,33 @@
 
   function clearCouponState() {
     appliedCouponCode = null;
+    appliedDiscount = 0;
+    appliedNewTotal = null;
     if (checkoutCouponInput) checkoutCouponInput.value = '';
     if (checkoutCouponMessage) {
       checkoutCouponMessage.textContent = '';
       checkoutCouponMessage.className = 'mt-1.5 min-h-[1.25rem] text-sm';
+    }
+    updateCheckoutTotals();
+  }
+
+  function updateCheckoutTotals() {
+    const cart = getCart();
+    const subtotal = getCartTotal(cart);
+    if (checkoutSubtotalEl) checkoutSubtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+    if (checkoutDiscountRow) {
+      if (appliedCouponCode && (appliedDiscount > 0 || (appliedNewTotal != null && appliedNewTotal < subtotal))) {
+        checkoutDiscountRow.classList.remove('hidden');
+        if (checkoutDiscountLabel) checkoutDiscountLabel.textContent = `Discount (${appliedCouponCode}):`;
+        const discount = appliedNewTotal != null ? subtotal - appliedNewTotal : appliedDiscount;
+        if (checkoutDiscountAmount) checkoutDiscountAmount.textContent = `-$${discount.toFixed(2)}`;
+        if (checkoutTotalEl) checkoutTotalEl.textContent = `$${(appliedNewTotal ?? subtotal - appliedDiscount).toFixed(2)}`;
+      } else {
+        checkoutDiscountRow.classList.add('hidden');
+        if (checkoutTotalEl) checkoutTotalEl.textContent = `$${subtotal.toFixed(2)}`;
+      }
+    } else if (checkoutTotalEl) {
+      checkoutTotalEl.textContent = `$${(appliedNewTotal ?? subtotal).toFixed(2)}`;
     }
   }
 
@@ -407,9 +444,7 @@
       }).join('');
     }
 
-    if (checkoutTotalEl) {
-      checkoutTotalEl.textContent = `$${getCartTotal(cart).toFixed(2)}`;
-    }
+    updateCheckoutTotals();
 
     showCheckoutStep('email');
     checkoutModal?.classList.remove('hidden');
@@ -496,19 +531,37 @@
       return;
     }
     setCouponMessage('Checking...', false);
+    const cart = getCart();
+    const cartTotal = getCartTotal(cart);
+    const items = cart.items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity }));
     try {
-      const result = await validateCoupon(code);
+      const result = await validateCoupon({
+        code,
+        cartTotal,
+        items,
+        customerEmail: checkoutEmail?.value?.trim() || undefined,
+      });
       if (result.valid) {
         appliedCouponCode = code.toUpperCase();
+        appliedDiscount = Number(result.discount) || 0;
+        appliedNewTotal = result.newTotal != null ? Number(result.newTotal) : (cartTotal - appliedDiscount);
+        updateCheckoutTotals();
         setCouponMessage('', false, true);
         if (checkoutCouponInput) checkoutCouponInput.value = appliedCouponCode;
       } else {
         appliedCouponCode = null;
+        appliedDiscount = 0;
+        appliedNewTotal = null;
+        updateCheckoutTotals();
         setCouponMessage(result.error, true);
       }
-    } catch {
+    } catch (err) {
       appliedCouponCode = null;
-      setCouponMessage('Could not validate coupon. Try again or continue without.', true);
+      appliedDiscount = 0;
+      appliedNewTotal = null;
+      updateCheckoutTotals();
+      const msg = err instanceof Error ? err.message : 'Could not validate coupon. Try again or continue without.';
+      setCouponMessage(msg, true);
     }
   });
 

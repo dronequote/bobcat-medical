@@ -2,6 +2,8 @@
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://lpai-monorepo-production.up.railway.app/api';
 const CLIENT_ID = 'bobcat-medical';
+/** Storefront API base for bobcat-medical (no zoo routes). */
+const STOREFRONT_BASE = `${API_BASE}/storefront/${CLIENT_ID}`;
 
 import { fetchWithAdminAuth } from './admin-auth';
 
@@ -499,50 +501,76 @@ export async function deleteStaff(id: string): Promise<void> {
   }
 }
 
-// ==================== COUPON VALIDATION ====================
+// ==================== COUPON VALIDATION (Storefront API) ====================
 
-/** Validates a coupon via the site's API route (GHL). Use before checkout for immediate feedback. */
-export async function validateCoupon(
-  couponCode: string
-): Promise<
-  | { valid: true; couponId: string; coupon?: unknown }
-  | { valid: false; error: string }
-> {
-  const response = await fetch('/api/validate-coupon', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ couponCode: couponCode.trim() }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (data.valid && data.couponId) {
-    return { valid: true, couponId: data.couponId, coupon: data.coupon };
-  }
-  return { valid: false, error: data.error || 'Invalid or expired coupon code.' };
+export interface ValidateCouponPayload {
+  code: string;
+  cartTotal: number;
+  items: Array<{ name: string; price: number; quantity: number }>;
+  customerEmail?: string;
 }
 
-// ==================== CHECKOUT ====================
+/** Validates a coupon via storefront coupon/validate. Uses backend for bobcat-medical (not zoo). */
+export async function validateCoupon(payload: ValidateCouponPayload): Promise<
+  | { valid: true; discount?: number; newTotal?: number; couponId?: string; [k: string]: unknown }
+  | { valid: false; error: string }
+> {
+  const body = {
+    code: (payload.code || '').trim().toUpperCase(),
+    cartTotal: Number(payload.cartTotal) || 0,
+    items: Array.isArray(payload.items) ? payload.items : [],
+    ...(payload.customerEmail ? { customerEmail: payload.customerEmail.trim() } : {}),
+  };
+  const response = await fetch(`${STOREFRONT_BASE}/coupon/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (data.valid === true) {
+    return {
+      valid: true,
+      discount: data.discount,
+      newTotal: data.newTotal,
+      couponId: data.couponId,
+      ...data,
+    };
+  }
+  const errMsg = data.error ?? data.message ?? (response.ok ? 'Invalid or expired coupon code.' : 'Coupon validation failed.');
+  return { valid: false, error: typeof errMsg === 'string' ? errMsg : 'Invalid or expired coupon code.' };
+}
+
+// ==================== CHECKOUT (Storefront API) ====================
 
 export async function createCheckout(data: {
-  items: {
+  items: Array<{
     productId: string;
     name: string;
     price: number;
     quantity: number;
     ghlProductId?: string;
     ghlPriceId?: string;
-  }[];
+  }>;
   customerEmail: string;
   customerName?: string;
   couponCode?: string;
 }): Promise<{ paymentUrl: string }> {
-  const response = await fetch(`${API_BASE}/storefront/checkout`, {
+  const response = await fetch(`${STOREFRONT_BASE}/checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clientId: CLIENT_ID, ...data }),
+    body: JSON.stringify({
+      items: data.items,
+      customerEmail: data.customerEmail,
+      ...(data.customerName ? { customerName: data.customerName } : {}),
+      ...(data.couponCode ? { couponCode: data.couponCode } : {}),
+    }),
   });
-  const result = await response.json();
+  const result = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const msg = result.message || result.error;
+    if (import.meta.env.DEV) {
+      console.error('Checkout failed:', response.status, result);
+    }
+    const msg = result.message ?? result.error ?? result.details;
     const msgStr = String(msg || '').toLowerCase();
     const looksLikeCouponError =
       response.status === 422 ||
@@ -551,7 +579,18 @@ export async function createCheckout(data: {
     if (looksLikeCouponError) {
       throw new Error('The coupon code could not be applied. It may be invalid, expired, or not applicable to this order. Try removing it or use a different code.');
     }
+    if (response.status >= 500) {
+      throw new Error(typeof msg === 'string' ? msg : 'Something went wrong on our end. Please try again or contact us.');
+    }
     throw new Error(typeof msg === 'string' ? msg : 'Checkout failed');
   }
-  return result;
+  const paymentUrl =
+    result.paymentUrl ?? result.paymentLink ?? result.checkoutUrl ?? result.url;
+  if (!paymentUrl || typeof paymentUrl !== 'string') {
+    if (import.meta.env.DEV) {
+      console.error('Checkout success but no payment URL in response:', result);
+    }
+    throw new Error('No payment link received. Please try again or contact us.');
+  }
+  return { paymentUrl };
 }
